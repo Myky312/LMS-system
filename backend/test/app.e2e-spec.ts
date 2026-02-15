@@ -14,7 +14,7 @@ describe('AppController (e2e)', () => {
       imports: [AppModule],
     }).compile();
     app = moduleFixture.createNestApplication();
-    app.setGlobalPrefix('api');
+    app.setGlobalPrefix('api/v1');
     app.useGlobalFilters(new AllExceptionsFilter());
     await app.init();
   });
@@ -25,6 +25,6 @@ describe('AppController (e2e)', () => {
   });
 
   it('API prefix returns 404 for unknown route', () => {
-    return request(app.getHttpServer()).get('/api').expect(404);
+    return request(app.getHttpServer()).get('/api/v1').expect(404);
   });
 });

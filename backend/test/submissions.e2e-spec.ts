@@ -56,21 +56,21 @@ describe('Submissions Idempotency & Transaction Rollback (e2e)', () => {
 
     // Create course structure
     const courseRes = await request(app.getHttpServer())
-      .post('/api/courses')
+      .post('/api/v1/courses')
       .set(getAuthHeaders(teacherToken))
       .send({ title: 'Test Course' })
       .expect(201);
     courseId = (courseRes.body as ApiResourceId).id;
 
     const moduleRes = await request(app.getHttpServer())
-      .post(`/api/courses/${courseId}/modules`)
+      .post(`/api/v1/courses/${courseId}/modules`)
       .set(getAuthHeaders(teacherToken))
       .send({ title: 'Module 1' })
       .expect(201);
     moduleId = (moduleRes.body as ApiResourceId).id;
 
     const lessonRes = await request(app.getHttpServer())
-      .post(`/api/modules/${moduleId}/lessons`)
+      .post(`/api/v1/modules/${moduleId}/lessons`)
       .set(getAuthHeaders(teacherToken))
       .send({ title: 'Lesson 1' })
       .expect(201);
@@ -78,7 +78,7 @@ describe('Submissions Idempotency & Transaction Rollback (e2e)', () => {
 
     // Create task
     const taskRes = await request(app.getHttpServer())
-      .post(`/api/lessons/${lessonId}/tasks`)
+      .post(`/api/v1/lessons/${lessonId}/tasks`)
       .set(getAuthHeaders(teacherToken))
       .send({
         type: 'AUDIO',
@@ -91,7 +91,7 @@ describe('Submissions Idempotency & Transaction Rollback (e2e)', () => {
   it('Duplicate submission → 400 (idempotency)', async () => {
     // First submission succeeds
     const response1 = await request(app.getHttpServer())
-      .post(`/api/tasks/${taskId}/submit`)
+      .post(`/api/v1/tasks/${taskId}/submit`)
       .set(getAuthHeaders(studentToken))
       .send({ answer: { audioUrl: 'test.mp3' } })
       .expect(201);
@@ -100,7 +100,7 @@ describe('Submissions Idempotency & Transaction Rollback (e2e)', () => {
 
     // Second submission fails
     await request(app.getHttpServer())
-      .post(`/api/tasks/${taskId}/submit`)
+      .post(`/api/v1/tasks/${taskId}/submit`)
       .set(getAuthHeaders(studentToken))
       .send({ answer: { audioUrl: 'test2.mp3' } })
       .expect(400);
@@ -118,7 +118,7 @@ describe('Submissions Idempotency & Transaction Rollback (e2e)', () => {
   it('Invalid quiz answer → transaction rollback (no submission inserted)', async () => {
     // Create quiz task
     const quizTaskRes = await request(app.getHttpServer())
-      .post(`/api/lessons/${lessonId}/tasks`)
+      .post(`/api/v1/lessons/${lessonId}/tasks`)
       .set(getAuthHeaders(teacherToken))
       .send({
         type: 'QUIZ',
@@ -142,7 +142,7 @@ describe('Submissions Idempotency & Transaction Rollback (e2e)', () => {
 
     // Submit invalid answer (out of bounds)
     await request(app.getHttpServer())
-      .post(`/api/tasks/${quizTaskId}/submit`)
+      .post(`/api/v1/tasks/${quizTaskId}/submit`)
       .set(getAuthHeaders(studentToken))
       .send({ answer: { selectedOption: 999 } })
       .expect(400);
@@ -159,7 +159,7 @@ describe('Submissions Idempotency & Transaction Rollback (e2e)', () => {
   it('Valid quiz submission → transaction commits (submission inserted)', async () => {
     // Create quiz task
     const quizTaskRes = await request(app.getHttpServer())
-      .post(`/api/lessons/${lessonId}/tasks`)
+      .post(`/api/v1/lessons/${lessonId}/tasks`)
       .set(getAuthHeaders(teacherToken))
       .send({
         type: 'QUIZ',
@@ -175,7 +175,7 @@ describe('Submissions Idempotency & Transaction Rollback (e2e)', () => {
 
     // Submit valid answer
     const response = await request(app.getHttpServer())
-      .post(`/api/tasks/${quizTaskId}/submit`)
+      .post(`/api/v1/tasks/${quizTaskId}/submit`)
       .set(getAuthHeaders(studentToken))
       .send({ answer: { selectedOption: 2 } })
       .expect(201);

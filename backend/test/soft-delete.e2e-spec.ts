@@ -56,28 +56,28 @@ describe('Soft Delete (e2e)', () => {
 
     // Create full course structure
     const courseRes = await request(app.getHttpServer())
-      .post('/api/courses')
+      .post('/api/v1/courses')
       .set(getAuthHeaders(teacherToken))
       .send({ title: 'Test Course', description: 'Test' })
       .expect(201);
     courseId = (courseRes.body as ApiResourceId).id;
 
     const moduleRes = await request(app.getHttpServer())
-      .post(`/api/courses/${courseId}/modules`)
+      .post(`/api/v1/courses/${courseId}/modules`)
       .set(getAuthHeaders(teacherToken))
       .send({ title: 'Module 1' })
       .expect(201);
     moduleId = (moduleRes.body as ApiResourceId).id;
 
     const lessonRes = await request(app.getHttpServer())
-      .post(`/api/modules/${moduleId}/lessons`)
+      .post(`/api/v1/modules/${moduleId}/lessons`)
       .set(getAuthHeaders(teacherToken))
       .send({ title: 'Lesson 1' })
       .expect(201);
     lessonId = (lessonRes.body as ApiResourceId).id;
 
     const taskRes = await request(app.getHttpServer())
-      .post(`/api/lessons/${lessonId}/tasks`)
+      .post(`/api/v1/lessons/${lessonId}/tasks`)
       .set(getAuthHeaders(teacherToken))
       .send({
         type: 'QUIZ',
@@ -94,7 +94,7 @@ describe('Soft Delete (e2e)', () => {
   it('Soft delete course → course not in list', async () => {
     // Verify course exists
     await request(app.getHttpServer())
-      .get(`/api/courses/${courseId}`)
+      .get(`/api/v1/courses/${courseId}`)
       .set(getAuthHeaders(teacherToken))
       .expect(200);
 
@@ -106,7 +106,7 @@ describe('Soft Delete (e2e)', () => {
 
     // Course should not appear in list
     const listRes = await request(app.getHttpServer())
-      .get('/api/courses')
+      .get('/api/v1/courses')
       .set(getAuthHeaders(teacherToken))
       .expect(200);
 
@@ -116,7 +116,7 @@ describe('Soft Delete (e2e)', () => {
 
     // Direct access should return 404
     await request(app.getHttpServer())
-      .get(`/api/courses/${courseId}`)
+      .get(`/api/v1/courses/${courseId}`)
       .set(getAuthHeaders(teacherToken))
       .expect(404);
   });
@@ -130,19 +130,19 @@ describe('Soft Delete (e2e)', () => {
 
     // Module should not be accessible
     await request(app.getHttpServer())
-      .get(`/api/modules/${moduleId}`)
+      .get(`/api/v1/modules/${moduleId}`)
       .set(getAuthHeaders(teacherToken))
       .expect(404);
 
     // Lesson should not be accessible
     await request(app.getHttpServer())
-      .get(`/api/modules/${moduleId}/lessons`)
+      .get(`/api/v1/modules/${moduleId}/lessons`)
       .set(getAuthHeaders(teacherToken))
       .expect(404);
 
     // Task should not be accessible
     await request(app.getHttpServer())
-      .get(`/api/lessons/${lessonId}/tasks/${taskId}`)
+      .get(`/api/v1/lessons/${lessonId}/tasks/${taskId}`)
       .set(getAuthHeaders(teacherToken))
       .expect(404);
   });
@@ -150,7 +150,7 @@ describe('Soft Delete (e2e)', () => {
   it('Soft delete task → student cannot submit', async () => {
     // Verify task exists
     await request(app.getHttpServer())
-      .get(`/api/lessons/${lessonId}/tasks/${taskId}`)
+      .get(`/api/v1/lessons/${lessonId}/tasks/${taskId}`)
       .set(getAuthHeaders(teacherToken))
       .expect(200);
 
@@ -162,7 +162,7 @@ describe('Soft Delete (e2e)', () => {
 
     // Student cannot submit to deleted task
     await request(app.getHttpServer())
-      .post(`/api/tasks/${taskId}/submit`)
+      .post(`/api/v1/tasks/${taskId}/submit`)
       .set(getAuthHeaders(studentToken))
       .send({ answer: { selectedOption: 0 } })
       .expect(404);
@@ -177,19 +177,19 @@ describe('Soft Delete (e2e)', () => {
 
     // Module should not be accessible
     await request(app.getHttpServer())
-      .get(`/api/modules/${moduleId}`)
+      .get(`/api/v1/modules/${moduleId}`)
       .set(getAuthHeaders(teacherToken))
       .expect(404);
 
     // Lesson should not be accessible (module deleted)
     await request(app.getHttpServer())
-      .get(`/api/modules/${moduleId}/lessons`)
+      .get(`/api/v1/modules/${moduleId}/lessons`)
       .set(getAuthHeaders(teacherToken))
       .expect(404);
 
     // Cannot create new lesson in deleted module
     await request(app.getHttpServer())
-      .post(`/api/modules/${moduleId}/lessons`)
+      .post(`/api/v1/modules/${moduleId}/lessons`)
       .set(getAuthHeaders(teacherToken))
       .send({ title: 'New Lesson' })
       .expect(404);
@@ -211,7 +211,7 @@ describe('Soft Delete (e2e)', () => {
     // Teacher B tries to access deleted course → 404 (not 403)
     // This proves soft delete hides data from everyone, not just owner
     await request(app.getHttpServer())
-      .get(`/api/courses/${courseId}`)
+      .get(`/api/v1/courses/${courseId}`)
       .set(getAuthHeaders(teacherBToken))
       .expect(404);
   });

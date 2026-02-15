@@ -9,7 +9,7 @@ export async function createTestApp(): Promise<INestApplication> {
   }).compile();
 
   const app = moduleFixture.createNestApplication();
-  app.setGlobalPrefix('api');
+  app.setGlobalPrefix('api/v1');
   // Note: Validation is handled per-endpoint using ZodValidationPipe with specific schemas
   app.useGlobalFilters(new AllExceptionsFilter());
 

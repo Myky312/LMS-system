@@ -22,7 +22,7 @@ describe('Authentication (e2e)', () => {
 
   it('Login with valid credentials → 200 with tokens', async () => {
     const response = await request(app.getHttpServer())
-      .post('/api/auth/login')
+      .post('/api/v1/auth/login')
       .send({
         email: testUsers.teacherA.email,
         password: testUsers.teacherA.password,
@@ -38,7 +38,7 @@ describe('Authentication (e2e)', () => {
 
   it('Login with invalid credentials → 401', async () => {
     await request(app.getHttpServer())
-      .post('/api/auth/login')
+      .post('/api/v1/auth/login')
       .send({
         email: testUsers.teacherA.email,
         password: 'wrongpassword',
@@ -47,12 +47,12 @@ describe('Authentication (e2e)', () => {
   });
 
   it('Access protected route without token → 401', async () => {
-    await request(app.getHttpServer()).get('/api/courses').expect(401);
+    await request(app.getHttpServer()).get('/api/v1/courses').expect(401);
   });
 
   it('Access protected route with invalid token → 401', async () => {
     await request(app.getHttpServer())
-      .get('/api/courses')
+      .get('/api/v1/courses')
       .set({ Authorization: 'Bearer invalid_token' })
       .expect(401);
   });

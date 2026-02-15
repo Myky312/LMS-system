@@ -6,12 +6,13 @@ import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Global prefix
-  app.setGlobalPrefix('api');
+  // Global prefix (versioned API)
+  app.setGlobalPrefix('api/v1');
 
   // CORS
   app.enableCors();
@@ -20,6 +21,9 @@ async function bootstrap() {
 
   // Global exception filter
   app.useGlobalFilters(new AllExceptionsFilter());
+
+  // Structured request logging (correlation ID from RequestIdMiddleware)
+  app.useGlobalInterceptors(new LoggingInterceptor());
 
   // Swagger configuration
   const config = new DocumentBuilder()
@@ -48,7 +52,7 @@ async function bootstrap() {
 
   await app.listen(process.env.PORT ?? 3000);
   console.log(
-    `Application is running on: http://localhost:${process.env.PORT ?? 3000}/api`,
+    `Application is running on: http://localhost:${process.env.PORT ?? 3000}/api/v1`,
   );
   console.log(
     `Swagger documentation: http://localhost:${process.env.PORT ?? 3000}/api/docs`,

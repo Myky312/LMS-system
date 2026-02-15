@@ -24,6 +24,11 @@ if (!testDatabaseUrl) {
 
 process.env.DATABASE_URL = testDatabaseUrl;
 
+// Use separate S3 bucket for tests (no cross-contamination with dev/prod)
+if (process.env.NODE_ENV === 'test' && process.env.S3_BUCKET_TEST) {
+  process.env.S3_BUCKET = process.env.S3_BUCKET_TEST;
+}
+
 const requiredEnvVars = ['JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET'];
 for (const envVar of requiredEnvVars) {
   if (!process.env[envVar]) {

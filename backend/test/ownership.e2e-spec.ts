@@ -53,7 +53,7 @@ describe('Ownership Violation (e2e)', () => {
 
     // Teacher A creates course
     const courseRes = await request(app.getHttpServer())
-      .post('/api/courses')
+      .post('/api/v1/courses')
       .set(getAuthHeaders(teacherAToken))
       .send({ title: 'Teacher A Course', description: 'Test course' })
       .expect(201);
@@ -62,7 +62,7 @@ describe('Ownership Violation (e2e)', () => {
 
     // Teacher A creates module
     const moduleRes = await request(app.getHttpServer())
-      .post(`/api/courses/${courseId}/modules`)
+      .post(`/api/v1/courses/${courseId}/modules`)
       .set(getAuthHeaders(teacherAToken))
       .send({ title: 'Module 1' })
       .expect(201);
@@ -71,7 +71,7 @@ describe('Ownership Violation (e2e)', () => {
 
     // Teacher A creates lesson
     const lessonRes = await request(app.getHttpServer())
-      .post(`/api/modules/${moduleId}/lessons`)
+      .post(`/api/v1/modules/${moduleId}/lessons`)
       .set(getAuthHeaders(teacherAToken))
       .send({ title: 'Lesson 1' })
       .expect(201);
@@ -81,7 +81,7 @@ describe('Ownership Violation (e2e)', () => {
 
   it('Teacher B cannot create module in Teacher A course → 403', async () => {
     await request(app.getHttpServer())
-      .post(`/api/courses/${courseId}/modules`)
+      .post(`/api/v1/courses/${courseId}/modules`)
       .set(getAuthHeaders(teacherBToken))
       .send({ title: 'Unauthorized Module' })
       .expect(403);
@@ -89,7 +89,7 @@ describe('Ownership Violation (e2e)', () => {
 
   it('Teacher B cannot create lesson in Teacher A module → 403', async () => {
     await request(app.getHttpServer())
-      .post(`/api/modules/${moduleId}/lessons`)
+      .post(`/api/v1/modules/${moduleId}/lessons`)
       .set(getAuthHeaders(teacherBToken))
       .send({ title: 'Unauthorized Lesson' })
       .expect(403);
@@ -97,7 +97,7 @@ describe('Ownership Violation (e2e)', () => {
 
   it('Teacher B cannot create task in Teacher A lesson → 403', async () => {
     await request(app.getHttpServer())
-      .post(`/api/lessons/${lessonId}/tasks`)
+      .post(`/api/v1/lessons/${lessonId}/tasks`)
       .set(getAuthHeaders(teacherBToken))
       .send({
         type: 'QUIZ',
@@ -112,7 +112,7 @@ describe('Ownership Violation (e2e)', () => {
 
   it('Teacher B cannot access Teacher A course → 403', async () => {
     await request(app.getHttpServer())
-      .get(`/api/courses/${courseId}`)
+      .get(`/api/v1/courses/${courseId}`)
       .set(getAuthHeaders(teacherBToken))
       .expect(403);
   });
@@ -127,7 +127,7 @@ describe('Ownership Violation (e2e)', () => {
 
     // Create task first
     const taskRes = await request(app.getHttpServer())
-      .post(`/api/lessons/${lessonId}/tasks`)
+      .post(`/api/v1/lessons/${lessonId}/tasks`)
       .set(getAuthHeaders(teacherAToken))
       .send({
         type: 'AUDIO',
@@ -139,7 +139,7 @@ describe('Ownership Violation (e2e)', () => {
 
     // Student submits
     const submissionRes = await request(app.getHttpServer())
-      .post(`/api/tasks/${taskId}/submit`)
+      .post(`/api/v1/tasks/${taskId}/submit`)
       .set(getAuthHeaders(studentToken))
       .send({ answer: { audioUrl: 'test.mp3' } })
       .expect(201);
@@ -148,7 +148,7 @@ describe('Ownership Violation (e2e)', () => {
 
     // Teacher B tries to review → should fail
     await request(app.getHttpServer())
-      .patch(`/api/submissions/${submissionId}/review`)
+      .patch(`/api/v1/submissions/${submissionId}/review`)
       .set(getAuthHeaders(teacherBToken))
       .send({ status: 'APPROVED', feedback: 'Good' })
       .expect(403);

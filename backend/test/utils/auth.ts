@@ -37,7 +37,7 @@ export async function login(
   password: string,
 ): Promise<string> {
   const response = await request(app.getHttpServer())
-    .post('/api/auth/login')
+    .post('/api/v1/auth/login')
     .send({ email, password })
     .expect(200);
 
