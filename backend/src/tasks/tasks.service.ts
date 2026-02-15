@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { db } from '../database/drizzle';
 import { tasks, lessons, modules, courses } from '../database/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { validateTaskConfig } from './validators/task-config.validator';
 import { LessonsService } from '../lessons/lessons.service';
@@ -46,17 +46,29 @@ export class TasksService {
   }
 
   async findOne(id: string) {
-    const [task] = await db
-      .select()
+    // Task is invisible if it or any parent (lesson → module → course) is soft-deleted
+    const [row] = await db
+      .select({ task: tasks })
       .from(tasks)
-      .where(whereConditions(tasks.deletedAt, eq(tasks.id, id)))
+      .innerJoin(lessons, eq(tasks.lessonId, lessons.id))
+      .innerJoin(modules, eq(lessons.moduleId, modules.id))
+      .innerJoin(courses, eq(modules.courseId, courses.id))
+      .where(
+        and(
+          eq(tasks.id, id),
+          notDeleted(tasks.deletedAt),
+          notDeleted(lessons.deletedAt),
+          notDeleted(modules.deletedAt),
+          notDeleted(courses.deletedAt),
+        ),
+      )
       .limit(1);
 
-    if (!task) {
+    if (!row) {
       throw new NotFoundException('Task not found');
     }
 
-    return task;
+    return row.task;
   }
 
   /**

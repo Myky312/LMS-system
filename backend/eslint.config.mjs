@@ -29,7 +29,14 @@ export default tseslint.config(
       '@typescript-eslint/no-explicit-any': 'off',
       '@typescript-eslint/no-floating-promises': 'warn',
       '@typescript-eslint/no-unsafe-argument': 'warn',
-      "prettier/prettier": ["error", { endOfLine: "auto" }],
+      'prettier/prettier': ['error', { endOfLine: 'auto' }],
+    },
+  },
+  {
+    files: ['test/**/*.ts'],
+    rules: {
+      // Supertest request(app.getHttpServer()) – Nest server type is compatible but not typed as supertest App
+      '@typescript-eslint/no-unsafe-argument': 'off',
     },
   },
 );

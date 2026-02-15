@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { db } from '../database/drizzle';
-import { lessons } from '../database/schema';
-import { eq, desc } from 'drizzle-orm';
+import { lessons, modules, courses } from '../database/schema';
+import { eq, desc, and } from 'drizzle-orm';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { ModulesService } from '../modules/modules.service';
 import { whereConditions, notDeleted } from '../common/utils/soft-delete.util';
@@ -66,17 +66,27 @@ export class LessonsService {
   }
 
   async findOne(id: string) {
-    const [lesson] = await db
-      .select()
+    // Lesson is invisible if it or its module/course is soft-deleted
+    const [row] = await db
+      .select({ lesson: lessons })
       .from(lessons)
-      .where(whereConditions(lessons.deletedAt, eq(lessons.id, id)))
+      .innerJoin(modules, eq(lessons.moduleId, modules.id))
+      .innerJoin(courses, eq(modules.courseId, courses.id))
+      .where(
+        and(
+          eq(lessons.id, id),
+          notDeleted(lessons.deletedAt),
+          notDeleted(modules.deletedAt),
+          notDeleted(courses.deletedAt),
+        ),
+      )
       .limit(1);
 
-    if (!lesson) {
+    if (!row) {
       throw new NotFoundException('Lesson not found');
     }
 
-    return lesson;
+    return row.lesson;
   }
 
   /**

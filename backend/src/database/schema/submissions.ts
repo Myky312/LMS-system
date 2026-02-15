@@ -13,25 +13,25 @@ import { SubmissionStatus } from '../../common/enums';
 export const taskSubmissions = pgTable(
   'task_submissions',
   {
-  id: uuid('id').defaultRandom().primaryKey(),
-  taskId: uuid('task_id')
-    .notNull()
-    .references(() => tasks.id),
-  studentId: uuid('student_id')
-    .notNull()
-    .references(() => users.id),
-  answer: jsonb('answer').notNull(),
-  status: text('status', {
-    enum: [
-      SubmissionStatus.PENDING,
-      SubmissionStatus.APPROVED,
-      SubmissionStatus.REJECTED,
-    ],
-  })
-    .notNull()
-    .default(SubmissionStatus.PENDING),
-  teacherFeedback: text('teacher_feedback'),
-  createdAt: timestamp('created_at').defaultNow().notNull(),
+    id: uuid('id').defaultRandom().primaryKey(),
+    taskId: uuid('task_id')
+      .notNull()
+      .references(() => tasks.id),
+    studentId: uuid('student_id')
+      .notNull()
+      .references(() => users.id),
+    answer: jsonb('answer').notNull(),
+    status: text('status', {
+      enum: [
+        SubmissionStatus.PENDING,
+        SubmissionStatus.APPROVED,
+        SubmissionStatus.REJECTED,
+      ],
+    })
+      .notNull()
+      .default(SubmissionStatus.PENDING),
+    teacherFeedback: text('teacher_feedback'),
+    createdAt: timestamp('created_at').defaultNow().notNull(),
     deletedAt: timestamp('deleted_at'),
   },
   (table) => ({

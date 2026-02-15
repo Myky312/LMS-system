@@ -1,9 +1,10 @@
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import { createTestApp } from './utils/test-app';
 import { login, getAuthHeaders, testUsers } from './utils/auth';
 import { truncateAllTables, seedUsers } from './utils/db-setup';
-import { db } from '../src/database/drizzle';
+import type { ApiResourceId, SubmissionResponse } from './utils/api-types';
+import { db, pool } from '../src/database/drizzle';
 import { taskSubmissions } from '../src/database/schema';
 import { eq } from 'drizzle-orm';
 
@@ -21,20 +22,37 @@ describe('Submissions Idempotency & Transaction Rollback (e2e)', () => {
     await truncateAllTables();
     await seedUsers();
 
-    teacherToken = await login(app, testUsers.teacherA.email, testUsers.teacherA.password);
-    studentToken = await login(app, testUsers.student.email, testUsers.student.password);
+    teacherToken = await login(
+      app,
+      testUsers.teacherA.email,
+      testUsers.teacherA.password,
+    );
+    studentToken = await login(
+      app,
+      testUsers.student.email,
+      testUsers.student.password,
+    );
   });
 
   afterAll(async () => {
     await app.close();
+    await pool.end();
   });
 
   beforeEach(async () => {
     await truncateAllTables();
     await seedUsers();
 
-    teacherToken = await login(app, testUsers.teacherA.email, testUsers.teacherA.password);
-    studentToken = await login(app, testUsers.student.email, testUsers.student.password);
+    teacherToken = await login(
+      app,
+      testUsers.teacherA.email,
+      testUsers.teacherA.password,
+    );
+    studentToken = await login(
+      app,
+      testUsers.student.email,
+      testUsers.student.password,
+    );
 
     // Create course structure
     const courseRes = await request(app.getHttpServer())
@@ -42,21 +60,21 @@ describe('Submissions Idempotency & Transaction Rollback (e2e)', () => {
       .set(getAuthHeaders(teacherToken))
       .send({ title: 'Test Course' })
       .expect(201);
-    courseId = courseRes.body.id;
+    courseId = (courseRes.body as ApiResourceId).id;
 
     const moduleRes = await request(app.getHttpServer())
       .post(`/api/courses/${courseId}/modules`)
       .set(getAuthHeaders(teacherToken))
       .send({ title: 'Module 1' })
       .expect(201);
-    moduleId = moduleRes.body.id;
+    moduleId = (moduleRes.body as ApiResourceId).id;
 
     const lessonRes = await request(app.getHttpServer())
       .post(`/api/modules/${moduleId}/lessons`)
       .set(getAuthHeaders(teacherToken))
       .send({ title: 'Lesson 1' })
       .expect(201);
-    lessonId = lessonRes.body.id;
+    lessonId = (lessonRes.body as ApiResourceId).id;
 
     // Create task
     const taskRes = await request(app.getHttpServer())
@@ -67,7 +85,7 @@ describe('Submissions Idempotency & Transaction Rollback (e2e)', () => {
         config: { instructions: 'Record audio' },
       })
       .expect(201);
-    taskId = taskRes.body.id;
+    taskId = (taskRes.body as ApiResourceId).id;
   });
 
   it('Duplicate submission → 400 (idempotency)', async () => {
@@ -78,7 +96,7 @@ describe('Submissions Idempotency & Transaction Rollback (e2e)', () => {
       .send({ answer: { audioUrl: 'test.mp3' } })
       .expect(201);
 
-    const submissionId1 = response1.body.id;
+    const submissionId1 = (response1.body as ApiResourceId).id;
 
     // Second submission fails
     await request(app.getHttpServer())
@@ -112,7 +130,7 @@ describe('Submissions Idempotency & Transaction Rollback (e2e)', () => {
       })
       .expect(201);
 
-    const quizTaskId = quizTaskRes.body.id;
+    const quizTaskId = (quizTaskRes.body as ApiResourceId).id;
 
     // Count submissions before
     const beforeCount = await db
@@ -153,7 +171,7 @@ describe('Submissions Idempotency & Transaction Rollback (e2e)', () => {
       })
       .expect(201);
 
-    const quizTaskId = quizTaskRes.body.id;
+    const quizTaskId = (quizTaskRes.body as ApiResourceId).id;
 
     // Submit valid answer
     const response = await request(app.getHttpServer())
@@ -169,8 +187,7 @@ describe('Submissions Idempotency & Transaction Rollback (e2e)', () => {
       .where(eq(taskSubmissions.taskId, quizTaskId));
 
     expect(submissions).toHaveLength(1);
-    expect(submissions[0].id).toBe(response.body.id);
+    expect(submissions[0].id).toBe((response.body as SubmissionResponse).id);
     expect(submissions[0].status).toBe('APPROVED'); // Auto-graded
   });
 });
-

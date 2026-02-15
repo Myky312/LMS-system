@@ -15,6 +15,7 @@ import s3Config from './config/s3.config';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
+      envFilePath: '.env',
       load: [databaseConfig, jwtConfig, s3Config],
     }),
     AuthModule,

@@ -1,33 +1,48 @@
 /**
  * E2E Test Setup
- * 
- * This file runs before all E2E tests
- * - Sets up test environment variables
- * - Validates test database connection
+ *
+ * Runs before all E2E tests:
+ * - Loads .env and requires TEST_DATABASE_URL (separate DB, same schema as app)
+ * - Switches DATABASE_URL to test DB so the app and Drizzle use it during tests
+ * - Runs migrations on test DB so its schema matches the app DB exactly
  */
+process.env.DOTENV_CONFIG_SUPPRESS_LOGS = 'true';
 
-// Load test environment variables
 import { config } from 'dotenv';
 import { resolve } from 'path';
+import { execSync } from 'child_process';
 
-// Load .env.test if it exists
-config({ path: resolve(__dirname, '../.env.test') });
+config({ path: resolve(__dirname, '../.env') });
 
-// Validate required test environment variables
-const requiredEnvVars = ['DATABASE_URL', 'JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET'];
-
-for (const envVar of requiredEnvVars) {
-  if (!process.env[envVar]) {
-    throw new Error(
-      `Missing required test environment variable: ${envVar}. Create .env.test file.`,
-    );
-  }
-}
-
-// Ensure we're using test database
-if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('test')) {
-  console.warn(
-    'WARNING: DATABASE_URL does not contain "test". Make sure you are using test database!',
+const testDatabaseUrl = process.env.TEST_DATABASE_URL;
+if (!testDatabaseUrl) {
+  throw new Error(
+    'TEST_DATABASE_URL is not set in .env. ' +
+      'Set it to a separate test database (e.g. baitulquran_test); it will be synced to app schema before each test run.',
   );
 }
 
+process.env.DATABASE_URL = testDatabaseUrl;
+
+const requiredEnvVars = ['JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET'];
+for (const envVar of requiredEnvVars) {
+  if (!process.env[envVar]) {
+    throw new Error(`Missing required test env: ${envVar}`);
+  }
+}
+
+// Sync test DB to app schema before every test run (same migrations as app DB)
+const backendDir = resolve(__dirname, '..');
+try {
+  execSync('pnpm run db:migrate', {
+    cwd: backendDir,
+    env: { ...process.env, DATABASE_URL: testDatabaseUrl },
+    stdio: 'pipe',
+  });
+} catch {
+  throw new Error(
+    'Failed to run migrations on test database. ' +
+      'Ensure PostgreSQL is running and baitulquran_test exists. ' +
+      'Create it if needed: createdb -U baitul_user baitulquran_test',
+  );
+}

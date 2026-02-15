@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { ApiProperty } from '@nestjs/swagger';
 
 export const submitTaskSchema = z.object({
-  answer: z.record(z.unknown()),
+  answer: z.record(z.string(), z.unknown()),
 });
 
 export class SubmitTaskDto {

@@ -1,5 +1,6 @@
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
+import type { LoginResponse } from './api-types';
 
 export interface TestUser {
   email: string;
@@ -40,7 +41,8 @@ export async function login(
     .send({ email, password })
     .expect(200);
 
-  return response.body.accessToken;
+  const body = response.body as LoginResponse;
+  return body.accessToken;
 }
 
 export function getAuthHeaders(token: string): { Authorization: string } {
@@ -48,4 +50,3 @@ export function getAuthHeaders(token: string): { Authorization: string } {
     Authorization: `Bearer ${token}`,
   };
 }
-

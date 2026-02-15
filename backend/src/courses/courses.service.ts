@@ -80,7 +80,7 @@ export class CoursesService {
    */
   async softDelete(id: string, userId: string) {
     // Verify ownership
-    const course = await this.findOne(id, 'TEACHER', userId);
+    await this.findOne(id, 'TEACHER', userId);
 
     const [deleted] = await db
       .update(courses)

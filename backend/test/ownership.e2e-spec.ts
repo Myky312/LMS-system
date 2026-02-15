@@ -1,8 +1,10 @@
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import { createTestApp } from './utils/test-app';
 import { login, getAuthHeaders, testUsers } from './utils/auth';
-import { truncateAllTables, seedUsers, getUserIdByEmail } from './utils/db-setup';
+import { truncateAllTables, seedUsers } from './utils/db-setup';
+import type { ApiResourceId } from './utils/api-types';
+import { pool } from '../src/database/drizzle';
 
 describe('Ownership Violation (e2e)', () => {
   let app: INestApplication;
@@ -17,20 +19,37 @@ describe('Ownership Violation (e2e)', () => {
     await truncateAllTables();
     await seedUsers();
 
-    teacherAToken = await login(app, testUsers.teacherA.email, testUsers.teacherA.password);
-    teacherBToken = await login(app, testUsers.teacherB.email, testUsers.teacherB.password);
+    teacherAToken = await login(
+      app,
+      testUsers.teacherA.email,
+      testUsers.teacherA.password,
+    );
+    teacherBToken = await login(
+      app,
+      testUsers.teacherB.email,
+      testUsers.teacherB.password,
+    );
   });
 
   afterAll(async () => {
     await app.close();
+    await pool.end();
   });
 
   beforeEach(async () => {
     await truncateAllTables();
     await seedUsers();
 
-    teacherAToken = await login(app, testUsers.teacherA.email, testUsers.teacherA.password);
-    teacherBToken = await login(app, testUsers.teacherB.email, testUsers.teacherB.password);
+    teacherAToken = await login(
+      app,
+      testUsers.teacherA.email,
+      testUsers.teacherA.password,
+    );
+    teacherBToken = await login(
+      app,
+      testUsers.teacherB.email,
+      testUsers.teacherB.password,
+    );
 
     // Teacher A creates course
     const courseRes = await request(app.getHttpServer())
@@ -39,7 +58,7 @@ describe('Ownership Violation (e2e)', () => {
       .send({ title: 'Teacher A Course', description: 'Test course' })
       .expect(201);
 
-    courseId = courseRes.body.id;
+    courseId = (courseRes.body as ApiResourceId).id;
 
     // Teacher A creates module
     const moduleRes = await request(app.getHttpServer())
@@ -48,7 +67,7 @@ describe('Ownership Violation (e2e)', () => {
       .send({ title: 'Module 1' })
       .expect(201);
 
-    moduleId = moduleRes.body.id;
+    moduleId = (moduleRes.body as ApiResourceId).id;
 
     // Teacher A creates lesson
     const lessonRes = await request(app.getHttpServer())
@@ -57,7 +76,7 @@ describe('Ownership Violation (e2e)', () => {
       .send({ title: 'Lesson 1' })
       .expect(201);
 
-    lessonId = lessonRes.body.id;
+    lessonId = (lessonRes.body as ApiResourceId).id;
   });
 
   it('Teacher B cannot create module in Teacher A course → 403', async () => {
@@ -100,7 +119,11 @@ describe('Ownership Violation (e2e)', () => {
 
   it('Teacher B cannot review submissions for Teacher A course → 403', async () => {
     // Create a submission first (student submits)
-    const studentToken = await login(app, testUsers.student.email, testUsers.student.password);
+    const studentToken = await login(
+      app,
+      testUsers.student.email,
+      testUsers.student.password,
+    );
 
     // Create task first
     const taskRes = await request(app.getHttpServer())
@@ -112,7 +135,7 @@ describe('Ownership Violation (e2e)', () => {
       })
       .expect(201);
 
-    const taskId = taskRes.body.id;
+    const taskId = (taskRes.body as ApiResourceId).id;
 
     // Student submits
     const submissionRes = await request(app.getHttpServer())
@@ -121,7 +144,7 @@ describe('Ownership Violation (e2e)', () => {
       .send({ answer: { audioUrl: 'test.mp3' } })
       .expect(201);
 
-    const submissionId = submissionRes.body.id;
+    const submissionId = (submissionRes.body as ApiResourceId).id;
 
     // Teacher B tries to review → should fail
     await request(app.getHttpServer())
@@ -131,4 +154,3 @@ describe('Ownership Violation (e2e)', () => {
       .expect(403);
   });
 });
-

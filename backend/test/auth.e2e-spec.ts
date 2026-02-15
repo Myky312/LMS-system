@@ -1,8 +1,10 @@
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import { createTestApp } from './utils/test-app';
 import { truncateAllTables, seedUsers } from './utils/db-setup';
 import { testUsers } from './utils/auth';
+import type { LoginResponse } from './utils/api-types';
+import { pool } from '../src/database/drizzle';
 
 describe('Authentication (e2e)', () => {
   let app: INestApplication;
@@ -15,6 +17,7 @@ describe('Authentication (e2e)', () => {
 
   afterAll(async () => {
     await app.close();
+    await pool.end();
   });
 
   it('Login with valid credentials → 200 with tokens', async () => {
@@ -26,10 +29,11 @@ describe('Authentication (e2e)', () => {
       })
       .expect(200);
 
-    expect(response.body).toHaveProperty('accessToken');
-    expect(response.body).toHaveProperty('refreshToken');
-    expect(response.body).toHaveProperty('user');
-    expect(response.body.user.email).toBe(testUsers.teacherA.email);
+    const body = response.body as LoginResponse;
+    expect(body).toHaveProperty('accessToken');
+    expect(body).toHaveProperty('refreshToken');
+    expect(body).toHaveProperty('user');
+    expect(body.user.email).toBe(testUsers.teacherA.email);
   });
 
   it('Login with invalid credentials → 401', async () => {
@@ -53,4 +57,3 @@ describe('Authentication (e2e)', () => {
       .expect(401);
   });
 });
-

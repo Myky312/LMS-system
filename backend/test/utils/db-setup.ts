@@ -6,22 +6,30 @@ import { UserRole } from '../../src/common/enums';
 import { testUsers } from './auth';
 
 /**
- * Truncate all tables and reset sequences
- * Call before each test suite
+ * Truncate all tables (child tables first to satisfy FKs).
+ * Does not use session_replication_role so it works with non-superuser DB roles.
+ * @throws Error with setup hint if the test DB schema is missing (run db:push with TEST_DATABASE_URL)
  */
 export async function truncateAllTables(): Promise<void> {
-  // Disable foreign key checks temporarily
-  await db.execute(sql`SET session_replication_role = 'replica'`);
-
-  await db.execute(sql`TRUNCATE TABLE task_submissions CASCADE`);
-  await db.execute(sql`TRUNCATE TABLE tasks CASCADE`);
-  await db.execute(sql`TRUNCATE TABLE lessons CASCADE`);
-  await db.execute(sql`TRUNCATE TABLE modules CASCADE`);
-  await db.execute(sql`TRUNCATE TABLE courses CASCADE`);
-  await db.execute(sql`TRUNCATE TABLE users CASCADE`);
-
-  // Re-enable foreign key checks
-  await db.execute(sql`SET session_replication_role = 'origin'`);
+  const run = async () => {
+    await db.execute(sql`TRUNCATE TABLE task_submissions CASCADE`);
+    await db.execute(sql`TRUNCATE TABLE tasks CASCADE`);
+    await db.execute(sql`TRUNCATE TABLE lessons CASCADE`);
+    await db.execute(sql`TRUNCATE TABLE modules CASCADE`);
+    await db.execute(sql`TRUNCATE TABLE courses CASCADE`);
+    await db.execute(sql`TRUNCATE TABLE users CASCADE`);
+  };
+  try {
+    await run();
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (message.includes('does not exist')) {
+      throw new Error(
+        `Test database schema missing. Apply schema first, e.g.: DATABASE_URL="<your TEST_DATABASE_URL>" pnpm run db:push. Original: ${message}`,
+      );
+    }
+    throw err;
+  }
 }
 
 /**
@@ -69,4 +77,3 @@ export async function getUserIdByEmail(email: string): Promise<string> {
 
   return user.id;
 }
-

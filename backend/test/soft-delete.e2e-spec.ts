@@ -1,10 +1,11 @@
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
+import request from 'supertest';
 import { createTestApp } from './utils/test-app';
 import { login, getAuthHeaders, testUsers } from './utils/auth';
 import { truncateAllTables, seedUsers } from './utils/db-setup';
-import { db } from '../src/database/drizzle';
-import { courses, modules, lessons, tasks } from '../src/database/schema';
+import type { ApiResourceId, CourseListItem } from './utils/api-types';
+import { db, pool } from '../src/database/drizzle';
+import { courses, modules, tasks } from '../src/database/schema';
 import { eq } from 'drizzle-orm';
 
 describe('Soft Delete (e2e)', () => {
@@ -21,20 +22,37 @@ describe('Soft Delete (e2e)', () => {
     await truncateAllTables();
     await seedUsers();
 
-    teacherToken = await login(app, testUsers.teacherA.email, testUsers.teacherA.password);
-    studentToken = await login(app, testUsers.student.email, testUsers.student.password);
+    teacherToken = await login(
+      app,
+      testUsers.teacherA.email,
+      testUsers.teacherA.password,
+    );
+    studentToken = await login(
+      app,
+      testUsers.student.email,
+      testUsers.student.password,
+    );
   });
 
   afterAll(async () => {
     await app.close();
+    await pool.end();
   });
 
   beforeEach(async () => {
     await truncateAllTables();
     await seedUsers();
 
-    teacherToken = await login(app, testUsers.teacherA.email, testUsers.teacherA.password);
-    studentToken = await login(app, testUsers.student.email, testUsers.student.password);
+    teacherToken = await login(
+      app,
+      testUsers.teacherA.email,
+      testUsers.teacherA.password,
+    );
+    studentToken = await login(
+      app,
+      testUsers.student.email,
+      testUsers.student.password,
+    );
 
     // Create full course structure
     const courseRes = await request(app.getHttpServer())
@@ -42,21 +60,21 @@ describe('Soft Delete (e2e)', () => {
       .set(getAuthHeaders(teacherToken))
       .send({ title: 'Test Course', description: 'Test' })
       .expect(201);
-    courseId = courseRes.body.id;
+    courseId = (courseRes.body as ApiResourceId).id;
 
     const moduleRes = await request(app.getHttpServer())
       .post(`/api/courses/${courseId}/modules`)
       .set(getAuthHeaders(teacherToken))
       .send({ title: 'Module 1' })
       .expect(201);
-    moduleId = moduleRes.body.id;
+    moduleId = (moduleRes.body as ApiResourceId).id;
 
     const lessonRes = await request(app.getHttpServer())
       .post(`/api/modules/${moduleId}/lessons`)
       .set(getAuthHeaders(teacherToken))
       .send({ title: 'Lesson 1' })
       .expect(201);
-    lessonId = lessonRes.body.id;
+    lessonId = (lessonRes.body as ApiResourceId).id;
 
     const taskRes = await request(app.getHttpServer())
       .post(`/api/lessons/${lessonId}/tasks`)
@@ -70,7 +88,7 @@ describe('Soft Delete (e2e)', () => {
         },
       })
       .expect(201);
-    taskId = taskRes.body.id;
+    taskId = (taskRes.body as ApiResourceId).id;
   });
 
   it('Soft delete course → course not in list', async () => {
@@ -92,7 +110,8 @@ describe('Soft Delete (e2e)', () => {
       .set(getAuthHeaders(teacherToken))
       .expect(200);
 
-    const courseIds = listRes.body.map((c: { id: string }) => c.id);
+    const listBody = listRes.body as CourseListItem[];
+    const courseIds = listBody.map((c) => c.id);
     expect(courseIds).not.toContain(courseId);
 
     // Direct access should return 404
@@ -183,7 +202,11 @@ describe('Soft Delete (e2e)', () => {
       .set({ deletedAt: new Date() })
       .where(eq(courses.id, courseId));
 
-    const teacherBToken = await login(app, testUsers.teacherB.email, testUsers.teacherB.password);
+    const teacherBToken = await login(
+      app,
+      testUsers.teacherB.email,
+      testUsers.teacherB.password,
+    );
 
     // Teacher B tries to access deleted course → 404 (not 403)
     // This proves soft delete hides data from everyone, not just owner
@@ -193,4 +216,3 @@ describe('Soft Delete (e2e)', () => {
       .expect(404);
   });
 });
-

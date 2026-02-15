@@ -91,7 +91,8 @@ export class SubmissionsController {
     reviewDto: ReviewSubmissionDto,
     @CurrentUser() user: { userId: string; role: string },
   ) {
-    const teacherId = user.role === UserRole.ADMIN ? undefined : user.userId;
+    const teacherId =
+      (user.role as UserRole) === UserRole.ADMIN ? undefined : user.userId;
     return this.submissionsService.review(id, reviewDto, teacherId!);
   }
 }

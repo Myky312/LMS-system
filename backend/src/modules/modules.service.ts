@@ -4,8 +4,8 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { db } from '../database/drizzle';
-import { modules } from '../database/schema';
-import { eq, desc } from 'drizzle-orm';
+import { modules, courses } from '../database/schema';
+import { eq, desc, and } from 'drizzle-orm';
 import { CreateModuleDto } from './dto/create-module.dto';
 import { CoursesService } from '../courses/courses.service';
 import { whereConditions, notDeleted } from '../common/utils/soft-delete.util';
@@ -57,17 +57,25 @@ export class ModulesService {
   }
 
   async findOne(id: string) {
-    const [module] = await db
-      .select()
+    // Module is invisible if it or its course is soft-deleted (child invisibility)
+    const [row] = await db
+      .select({ module: modules })
       .from(modules)
-      .where(whereConditions(modules.deletedAt, eq(modules.id, id)))
+      .innerJoin(courses, eq(modules.courseId, courses.id))
+      .where(
+        and(
+          eq(modules.id, id),
+          notDeleted(modules.deletedAt),
+          notDeleted(courses.deletedAt),
+        ),
+      )
       .limit(1);
 
-    if (!module) {
+    if (!row) {
       throw new NotFoundException('Module not found');
     }
 
-    return module;
+    return row.module;
   }
 
   /**

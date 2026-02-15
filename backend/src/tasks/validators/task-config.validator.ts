@@ -65,7 +65,7 @@ export function validateTaskConfig(type: TaskType, config: unknown): void {
   if (!result.success) {
     throw new BadRequestException({
       message: 'Invalid task config',
-      errors: result.error.errors,
+      errors: result.error.issues,
     });
   }
 }

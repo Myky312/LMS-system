@@ -1,11 +1,18 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
+import { JwtService, JwtSignOptions } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { StringValue } from 'ms';
 import * as bcrypt from 'bcrypt';
 import { db } from '../database/drizzle';
 import { users } from '../database/schema';
 import { eq } from 'drizzle-orm';
 import { LoginDto } from './dto/login.dto';
+
+interface JwtPayload {
+  userId: string;
+  email: string;
+  role: string;
+}
 
 @Injectable()
 export class AuthService {
@@ -47,9 +54,14 @@ export class AuthService {
 
   async refresh(refreshToken: string) {
     try {
-      const payload = await this.jwtService.verifyAsync(refreshToken, {
-        secret: this.configService.get<string>('jwt.refreshSecret'),
-      });
+      const payload = await this.jwtService.verifyAsync<JwtPayload>(
+        refreshToken,
+        {
+          secret:
+            this.configService.get<string>('jwt.refreshSecret') ??
+            'default-secret',
+        },
+      );
 
       const [user] = await db
         .select()
@@ -79,15 +91,28 @@ export class AuthService {
   private async generateTokens(userId: string, email: string, role: string) {
     const payload = { userId, email, role };
 
+    const accessSecret =
+      this.configService.get<string>('jwt.accessSecret') ?? 'default-secret';
+    const refreshSecret =
+      this.configService.get<string>('jwt.refreshSecret') ?? 'default-secret';
+    const accessExpiresIn =
+      this.configService.get<StringValue>('jwt.accessExpiresIn') ?? '15m';
+    const refreshExpiresIn =
+      this.configService.get<StringValue>('jwt.refreshExpiresIn') ?? '7d';
+
+    const accessOptions: JwtSignOptions = {
+      secret: accessSecret,
+      expiresIn: accessExpiresIn,
+    };
+
+    const refreshOptions: JwtSignOptions = {
+      secret: refreshSecret,
+      expiresIn: refreshExpiresIn,
+    };
+
     const [accessToken, refreshToken] = await Promise.all([
-      this.jwtService.signAsync(payload, {
-        secret: this.configService.get<string>('jwt.accessSecret'),
-        expiresIn: this.configService.get<string>('jwt.accessExpiresIn'),
-      }),
-      this.jwtService.signAsync(payload, {
-        secret: this.configService.get<string>('jwt.refreshSecret'),
-        expiresIn: this.configService.get<string>('jwt.refreshExpiresIn'),
-      }),
+      this.jwtService.signAsync(payload, accessOptions),
+      this.jwtService.signAsync(payload, refreshOptions),
     ]);
 
     return { accessToken, refreshToken };
