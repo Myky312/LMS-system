@@ -1,12 +1,21 @@
-# Infrastructure Runbook — Docker Stack
+# BaitulQuran
+
+Learning Management System (LMS) for structured Islamic education: courses, modules, lessons, and tasks (quiz, audio, photo) with teacher/student roles, submissions, and media via S3.
+
+- **Backend**: NestJS, Drizzle, PostgreSQL, JWT, S3-compatible storage. API at `api/v1`, Swagger at `/api/docs`, health and Prometheus metrics included.  
+  → Full backend docs: [backend/README.md](backend/README.md)
+
+- **Run everything in Docker**: Postgres, Backend, MinIO, Prometheus, Grafana. See [Run with Docker](#run-with-docker) below.
+
+---
+
+## Run with Docker
 
 Deterministic steps to bring up and verify the full stack (Postgres, Backend, MinIO, Prometheus, Grafana).
 
 **All commands from project root** (where `docker-compose.yml` lives).
 
----
-
-## STEP 0 — Pre-Flight Checklist
+### STEP 0 — Pre-Flight Checklist
 
 1. **Ensure `backend/.env.docker` exists**
    ```bash
@@ -28,9 +37,7 @@ Deterministic steps to bring up and verify the full stack (Postgres, Backend, Mi
    docker start baitul-backend
    ```
 
----
-
-## STEP 1 — Clean Start
+### STEP 1 — Clean Start
 
 ```bash
 docker compose down -v
@@ -38,9 +45,7 @@ docker compose down -v
 
 Removes containers, networks, and **volumes** (including Postgres data). Fresh state.
 
----
-
-## STEP 2 — Build and Start
+### STEP 2 — Build and Start
 
 ```bash
 docker compose up --build
@@ -66,9 +71,7 @@ If backend crashes, read logs:
 docker logs baitul-backend
 ```
 
----
-
-## STEP 3 — Verify Backend (Before Grafana)
+### STEP 3 — Verify Backend (Before Grafana)
 
 **Liveness**
 
@@ -94,9 +97,7 @@ curl http://localhost:3000/api/v1/metrics
 
 Expected: Prometheus text with `# HELP http_requests_total`, `# TYPE http_requests_total counter`, etc.
 
----
-
-## STEP 4 — Verify Prometheus
+### STEP 4 — Verify Prometheus
 
 1. Open **http://localhost:9090**
 2. Go to **Status → Targets**
@@ -104,29 +105,23 @@ Expected: Prometheus text with `# HELP http_requests_total`, `# TYPE http_reques
 
 If **DOWN**: wrong metrics path, backend not reachable (e.g. backend container not running), or wrong port. Metrics path must be `/api/v1/metrics`, target `backend:3000`.
 
----
-
-## STEP 5 — Verify Metrics in Prometheus
+### STEP 5 — Verify Metrics in Prometheus
 
 In Prometheus UI:
 
-- Query: `http_requests_total` → Execute. After hitting endpoints, values &gt; 0.
+- Query: `http_requests_total` → Execute. After hitting endpoints, values > 0.
 - Query: `http_request_duration_seconds_bucket` → histogram buckets.
 
----
-
-## STEP 6 — Setup Grafana
+### STEP 6 — Setup Grafana
 
 1. Open **http://localhost:3001**
 2. Login: **admin** / **admin** (change password when prompted)
 3. **Add Prometheus data source**
    - ⚙️ **Connections** → **Data sources** → **Add data source** → **Prometheus**
    - URL: **`http://prometheus:9090`** (use service name, **not** localhost)
-   - **Save &amp; test** → "Data source is working"
+   - **Save & test** → "Data source is working"
 
----
-
-## STEP 7 — Basic Dashboard
+### STEP 7 — Basic Dashboard
 
 - **Create** → **Dashboard** → **Add** panel.
 
@@ -151,9 +146,7 @@ for i in {1..50}; do curl -s http://localhost:3000/api/v1/health > /dev/null; do
 
 Watch the Grafana graph; if it moves, the pipeline is wired correctly.
 
----
-
-## Final Sanity Check
+### Final Sanity Check
 
 ```bash
 docker ps
@@ -167,9 +160,7 @@ Expected containers (all running):
 - **baitul-prometheus**
 - **baitul-grafana**
 
----
-
-## If Something Breaks
+### If Something Breaks
 
 | Symptom | Likely cause |
 |--------|----------------|
