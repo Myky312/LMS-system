@@ -35,6 +35,9 @@ dependencies:
   bcrypt:
     specifier: ^6.0.0
     version: 6.0.0
+  dotenv:
+    specifier: ^17.2.3
+    version: 17.3.1
   drizzle-orm:
     specifier: ^0.45.1
     version: 0.45.1(@types/pg@8.16.0)(pg@8.18.0)
@@ -53,6 +56,9 @@ dependencies:
   pino-pretty:
     specifier: ^10.3.0
     version: 10.3.1
+  prom-client:
+    specifier: ^15.1.0
+    version: 15.1.3
   reflect-metadata:
     specifier: ^0.2.2
     version: 0.2.2
@@ -115,9 +121,6 @@ devDependencies:
   cross-env:
     specifier: ^10.1.0
     version: 10.1.0
-  dotenv:
-    specifier: ^17.2.3
-    version: 17.3.1
   drizzle-kit:
     specifier: ^0.31.8
     version: 0.31.9
@@ -2628,6 +2631,11 @@ packages:
     dependencies:
       consola: 3.4.2
 
+  /@opentelemetry/api@1.9.0:
+    resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
+    engines: {node: '>=8.0.0'}
+    dev: false
+
   /@paralleldrive/cuid2@2.3.1:
     resolution: {integrity: sha512-XO7cAxhnTZl0Yggq6jOgjiOHhbgcO4NqFqwSmQpjK3b6TEE6Uj/jfSk6wzYyemh3+I0sHirKSetjQwn5cZktFw==}
     dependencies:
@@ -4115,6 +4123,10 @@ packages:
       node-gyp-build: 4.8.4
     dev: false
 
+  /bintrees@1.0.2:
+    resolution: {integrity: sha512-VOMgTMwjAaUG580SXn3LacVgjurrbMme7ZZNYGSSV7mmtY6QQRh0Eg3pwIcntQ77DErK1L0NxkbetjcoXzVwKw==}
+    dev: false
+
   /bl@4.1.0:
     resolution: {integrity: sha512-1W07cM9gS6DcLperZfFSj+bWLtaPGSOHWhPiGzXmvVJbRLdG82sH/Kn8EtW1VqWVA54AKf2h5k5BbnIbwF3h6w==}
     dependencies:
@@ -4565,7 +4577,7 @@ packages:
   /dotenv@17.3.1:
     resolution: {integrity: sha512-IO8C/dzEb6O3F9/twg6ZLXz164a2fhTnEWb95H23Dm4OuN+92NmEAlTrupP9VW6Jm3sO26tQlqyvyi4CsnY9GA==}
     engines: {node: '>=12'}
-    dev: true
+    dev: false
 
   /drizzle-kit@0.31.9:
     resolution: {integrity: sha512-GViD3IgsXn7trFyBUUHyTFBpH/FsHTxYJ66qdbVggxef4UBPHRYxQaRzYLTuekYnk9i5FIEL9pbBIwMqX/Uwrg==}
@@ -6880,6 +6892,14 @@ packages:
     engines: {node: '>= 0.6.0'}
     dev: false
 
+  /prom-client@15.1.3:
+    resolution: {integrity: sha512-6ZiOBfCywsD4k1BN9IX0uZhF+tJkV8q8llP64G5Hajs4JOeVLPCwpPVcpXy3BwYiUGgyJzsJJQeOIv7+hDSq8g==}
+    engines: {node: ^16 || ^18 || >=20}
+    dependencies:
+      '@opentelemetry/api': 1.9.0
+      tdigest: 0.1.2
+    dev: false
+
   /proxy-addr@2.0.7:
     resolution: {integrity: sha512-llQsMLSUDUPT44jdrU/O37qlnifitDP+ZwrmmZcoSKyLKvtZxpyV0n2/bD/N4tBAAZ/gJEdZU7KMraoK1+XYAg==}
     engines: {node: '>= 0.10'}
@@ -7393,6 +7413,12 @@ packages:
     resolution: {integrity: sha512-g9ljZiwki/LfxmQADO3dEY1CbpmXT5Hm2fJ+QaGKwSXUylMybePR7/67YW7jOrrvjEgL1Fmz5kzyAjWVWLlucg==}
     engines: {node: '>=6'}
     dev: true
+
+  /tdigest@0.1.2:
+    resolution: {integrity: sha512-+G0LLgjjo9BZX2MfdvPfH+MKLCrxlXSYec5DaPYP1fe6Iyhf0/fSmJ0bFiZ1F8BT6cGXl2LpltQptzjXKWEkKA==}
+    dependencies:
+      bintrees: 1.0.2
+    dev: false
 
   /terser-webpack-plugin@5.3.16(esbuild@0.25.12)(webpack@5.104.1):
     resolution: {integrity: sha512-h9oBFCWrq78NyWWVcSwZarJkZ01c2AyGrzs1crmHZO3QUg9D61Wu4NPjBy69n7JqylFF5y+CsUZYmYEIZ3mR+Q==}
