@@ -17,7 +17,9 @@ import { TasksModule } from './tasks/tasks.module';
 import { SubmissionsModule } from './submissions/submissions.module';
 import { MediaModule } from './media/media.module';
 import { HealthModule } from './health';
+import { MetricsModule } from './metrics/metrics.module';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
+import { MetricsInterceptor } from './common/interceptors/metrics.interceptor';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import databaseConfig from './config/database.config';
 import jwtConfig from './config/jwt.config';
@@ -35,7 +37,7 @@ function resolveLogLevel(): (typeof LOG_LEVELS)[number] {
 
 @Module({
   imports: [
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- @nestjs/pino types
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- nestjs-pino LoggerModule
     LoggerModule.forRoot({
       pinoHttp: {
         level: resolveLogLevel(),
@@ -50,7 +52,7 @@ function resolveLogLevel(): (typeof LOG_LEVELS)[number] {
       envFilePath: '.env',
       load: [databaseConfig, jwtConfig, s3Config],
     }),
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- @nestjs/throttler types
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- @nestjs/throttler
     ThrottlerModule.forRoot({
       throttlers: [
         {
@@ -67,6 +69,7 @@ function resolveLogLevel(): (typeof LOG_LEVELS)[number] {
     SubmissionsModule,
     MediaModule,
     HealthModule,
+    MetricsModule,
   ],
   providers: [
     ...(process.env.NODE_ENV !== 'test'
@@ -78,6 +81,7 @@ function resolveLogLevel(): (typeof LOG_LEVELS)[number] {
         ]
       : []),
     { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
+    { provide: APP_INTERCEPTOR, useClass: MetricsInterceptor },
   ],
 })
 export class AppModule implements NestModule {

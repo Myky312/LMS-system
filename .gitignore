@@ -32,6 +32,7 @@ backend/.env.local
 backend/.env.*.local
 backend/.env.test
 backend/.env.test.local
+backend/.env.docker
 
 # Database
 drizzle/

@@ -15,9 +15,8 @@ const E2E_THROTTLER_OPTIONS = {
 };
 
 async function createThrottlerTestApp(): Promise<INestApplication> {
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call -- getOptionsToken from @nestjs/throttler
   const optionsToken = getOptionsToken();
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call -- getStorageToken from @nestjs/throttler
+
   const storageToken = getStorageToken();
   const moduleFixture: TestingModule = await Test.createTestingModule({
     imports: [AppModule],
@@ -33,7 +32,7 @@ async function createThrottlerTestApp(): Promise<INestApplication> {
   const storage = moduleFixture.get(storageToken);
   const reflector = moduleFixture.get(Reflector);
   const guard = new IpThrottlerGuard(options, storage, reflector);
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- ThrottlerGuard lifecycle
+
   await guard.onModuleInit();
   app.useGlobalGuards(guard);
   app.setGlobalPrefix('api/v1');

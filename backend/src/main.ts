@@ -2,6 +2,7 @@
 import { config } from 'dotenv';
 config({ path: '.env' });
 
+import { LoggerService } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { Logger } from 'nestjs-pino';
@@ -12,13 +13,17 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
   });
-  app.useLogger(app.get(Logger));
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- nestjs-pino Logger token
+  const pinoLogger = app.get<LoggerService>(Logger);
+  app.useLogger(pinoLogger);
 
   // Graceful shutdown: handle SIGTERM/SIGINT and close connections cleanly
   app.enableShutdownHooks();
 
   // Trust first proxy (e.g. Nginx, load balancer). Required for correct req.ip and rate limiting.
-  const expressInstance = app.getHttpAdapter().getInstance();
+  const expressInstance = app.getHttpAdapter().getInstance() as {
+    set: (key: string, value: number) => void;
+  };
   expressInstance.set('trust proxy', 1);
 
   // Global prefix (versioned API)
@@ -59,8 +64,7 @@ async function bootstrap() {
 
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
-  const logger = app.get(Logger) as Logger;
-  logger.log(`Application is running on: http://localhost:${port}/api/v1`);
-  logger.log(`Swagger documentation: http://localhost:${port}/api/docs`);
+  pinoLogger.log(`Application is running on: http://localhost:${port}/api/v1`);
+  pinoLogger.log(`Swagger documentation: http://localhost:${port}/api/docs`);
 }
 void bootstrap();

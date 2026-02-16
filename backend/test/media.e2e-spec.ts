@@ -6,6 +6,11 @@ import { login, getAuthHeaders } from './utils/auth';
 import { testUsers } from './utils/auth';
 import { pool } from '../src/database/drizzle';
 
+interface PresignResponse {
+  uploadUrl: string;
+  fileUrl: string;
+}
+
 describe('Media presign (e2e)', () => {
   let app: INestApplication;
   let accessToken: string;
@@ -16,7 +21,11 @@ describe('Media presign (e2e)', () => {
     app = await createTestApp();
     await truncateAllTables();
     await seedUsers();
-    accessToken = await login(app, testUsers.teacherA.email, testUsers.teacherA.password);
+    accessToken = await login(
+      app,
+      testUsers.teacherA.email,
+      testUsers.teacherA.password,
+    );
   });
 
   afterAll(async () => {
@@ -34,7 +43,7 @@ describe('Media presign (e2e)', () => {
       })
       .expect(200);
 
-    const body = response.body;
+    const body = response.body as PresignResponse;
     expect(body).toHaveProperty('uploadUrl');
     expect(body).toHaveProperty('fileUrl');
     expect(typeof body.uploadUrl).toBe('string');
@@ -52,7 +61,7 @@ describe('Media presign (e2e)', () => {
         contentType: 'image/png',
       })
       .expect(200)
-      .expect((res) => {
+      .expect((res: { body: PresignResponse }) => {
         const { uploadUrl } = res.body;
         expect(uploadUrl).toContain(testBucket);
       });
@@ -67,7 +76,7 @@ describe('Media presign (e2e)', () => {
         contentType: 'application/pdf',
       })
       .expect(200)
-      .expect((res) => {
+      .expect((res: { body: PresignResponse }) => {
         const { uploadUrl } = res.body;
         expect(uploadUrl).toMatch(/X-Amz-/);
       });
@@ -82,7 +91,7 @@ describe('Media presign (e2e)', () => {
         contentType: 'audio/wav',
       })
       .expect(200)
-      .expect((res) => {
+      .expect((res: { body: PresignResponse }) => {
         const { fileUrl } = res.body;
         expect(fileUrl).toMatch(new RegExp(`s3://[^/]+/uploads/[^/]+\\.wav`));
       });
