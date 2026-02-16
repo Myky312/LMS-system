@@ -11,20 +11,24 @@ A complete Learning Management System backend built with NestJS, Drizzle ORM, Po
 - **Submissions**: One submission per (task, student)—DB unique constraint + app check (idempotency). QUIZ auto-graded (correct → APPROVED, wrong → REJECTED); AUDIO/PHOTO start as PENDING, teacher reviews via PATCH.
 - **Soft deletes**: All content tables have `deleted_at`. No hard deletes. All reads filter out deleted rows; if a parent is deleted (e.g. course), children (modules, lessons, tasks) return 404 (child invisibility).
 - **Media**: No file upload through the API. Client gets a presigned S3 URL from the backend and uploads directly to S3.
+- **Observability**: Health (liveness + readiness), Prometheus metrics at `/api/v1/metrics`, structured logging (Pino) with request ID middleware.
+- **Infrastructure**: API versioned at `api/v1`, rate limiting (Throttler), graceful shutdown, trust proxy for correct client IP.
 - **E2E tests**: Jest + Supertest; separate test DB (`TEST_DATABASE_URL`); migrations run on test DB before each run; truncate + seed per suite; pool closed in teardown.
 
 ## Tech Stack
 
 - **Runtime**: Node.js 20.x (see `.nvmrc`; use `nvm use` in backend).
-- **Package manager**: pnpm 8.x required. Node 20.x and pnpm 8.x are enforced via `package.json` `engines`.
+- **Package manager**: pnpm 8.x required. Node ≥20 &lt;21 and pnpm ≥8 &lt;9 are enforced via `package.json` `engines`.
 - **Language**: TypeScript (strict mode), exact version pinned (no floating compiler).
 - **Framework**: NestJS 11
 - **ORM**: Drizzle
 - **Database**: PostgreSQL 15+
 - **Auth**: JWT (access + refresh tokens)
 - **Validation**: Zod
-- **Storage**: S3-compatible (AWS S3 / MinIO)
+- **Storage**: S3-compatible (AWS S3 / MinIO), AWS SDK v3
 - **Docs**: Swagger
+- **Logging**: Pino (nestjs-pino)
+- **Metrics**: Prometheus (prom-client)
 - **Package Manager**: pnpm
 
 ### What We Use on the Backend (in detail)
@@ -33,12 +37,16 @@ A complete Learning Management System backend built with NestJS, Drizzle ORM, Po
 |--------|------------|-----|
 | Runtime | Node.js 20+ | Server execution. |
 | Language | TypeScript (strict) | Strict mode; type-safe codebase. |
-| Framework | NestJS 11 | Modules, DI, guards (`JwtAuthGuard`, `RolesGuard`), pipes (`ZodValidationPipe`), filters, Swagger. |
+| Framework | NestJS 11 | Modules, DI, guards (`JwtAuthGuard`, `RolesGuard`, `IpThrottlerGuard`), pipes (`ZodValidationPipe`), filters, interceptors, Swagger. |
 | ORM | Drizzle | Single Postgres connection, type-safe queries, `db.transaction()` for submit/review/lesson create, schema in `src/database/schema/`. |
 | Database | PostgreSQL 15+ | Single DB; all tables in one schema; UUIDs, JSONB for task config/answers. |
 | Auth | JWT + bcrypt | `@nestjs/jwt` + `jsonwebtoken` for sign/verify; bcrypt for password hash; access (short) + refresh (long) tokens. |
 | Validation | Zod | Per-route body validation via `ZodValidationPipe` and DTO schemas; task config validated by type (no global class-validator). |
-| Storage | S3-compatible | `aws-sdk` v2 for presigned URLs only; no file bytes through backend. |
+| Storage | S3-compatible | AWS SDK v3 (`@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner`) for presigned URLs only; no file bytes through backend. |
+| Logging | Pino | Structured JSON logs; `nestjs-pino`; request ID in logs; pino-pretty in non-production. |
+| Rate limiting | Throttler | `@nestjs/throttler`; 100 requests per 60s per IP; disabled in test env. |
+| Metrics | prom-client | HTTP request duration and count; exposed at `GET /api/v1/metrics` (Prometheus). |
+| Health | Custom | Liveness `GET /api/v1/health`, readiness `GET /api/v1/health/ready` (DB check). |
 | Docs | Swagger | Controller/DTO annotations; served at `/api/docs`. |
 | Tests | Jest, Supertest | E2E in `test/*.e2e-spec.ts`; test DB via `TEST_DATABASE_URL`; migrations in setup; pool closed in teardown. |
 
@@ -50,7 +58,7 @@ BaitulQuran/
  │    ├── src/
  │    │    ├── app.module.ts
  │    │    ├── main.ts
- │    │    ├── config/              # Configuration files
+ │    │    ├── config/              # Configuration (database, jwt, s3)
  │    │    ├── database/
  │    │    │    ├── drizzle.ts      # Database connection
  │    │    │    ├── schema/         # Drizzle schemas
@@ -66,12 +74,16 @@ BaitulQuran/
  │    │    ├── tasks/               # Tasks (polymorphic)
  │    │    ├── submissions/         # Task submissions
  │    │    ├── media/               # S3 presigned URLs
+ │    │    ├── health/              # Liveness & readiness
+ │    │    ├── metrics/             # Prometheus metrics
  │    │    └── common/
- │    │         ├── guards/         # JWT & Role guards
+ │    │         ├── guards/         # JWT, Role, IpThrottler guards
  │    │         ├── decorators/     # @Roles, @CurrentUser
  │    │         ├── enums/          # UserRole, TaskType, SubmissionStatus
  │    │         ├── dto/            # Zod validation pipe
- │    │         └── filters/        # Global exception filter
+ │    │         ├── filters/        # Global exception filter
+ │    │         ├── interceptors/   # Logging, Metrics
+ │    │         └── middleware/     # Request ID
  │    ├── test/                     # E2E tests
  │    ├── package.json
  │    ├── tsconfig.json
@@ -83,12 +95,15 @@ BaitulQuran/
 
 ## How It's Done
 
+- **API prefix**: All routes are under `api/v1` (versioned API).
 - **Auth flow**: Login POST sends email/password → bcrypt compare → JWT access + refresh returned. Protected routes use `JwtAuthGuard` (validates Bearer token, sets `request.user`) then `RolesGuard` (checks `@Roles()`). `@CurrentUser()` reads `user.userId` / `user.role` from the request.
-- **Ownership**: Services call explicit checks, e.g. `ModulesService.verifyOwnership(moduleId, teacherId)` loads module → course and ensures `course.created_by === teacherId`. Same pattern for lessons (via module) and tasks (via lesson → module → course). Submission review allowed only for tasks in the teacher’s course.
-- **Soft deletes**: All content queries use `whereConditions(table.deletedAt, …)` or `notDeleted(table.deletedAt)` from `common/utils/soft-delete.util.ts`. “Delete” is `UPDATE … SET deleted_at = now()`. Child invisibility: `ModulesService.findOne` joins `courses` and returns 404 if course is deleted; `LessonsService.findOne` joins modules + courses; `TasksService.findOne` joins lessons + modules + courses—so deleting a course hides all children.
+- **Ownership**: Services call explicit checks, e.g. `ModulesService.verifyOwnership(moduleId, teacherId)` loads module → course and ensures `course.created_by === teacherId`. Same pattern for lessons (via module) and tasks (via lesson → module → course). Submission review allowed only for tasks in the teacher's course.
+- **Soft deletes**: All content queries use `whereConditions(table.deletedAt, …)` or `notDeleted(table.deletedAt)` from `common/utils/soft-delete.util.ts`. "Delete" is `UPDATE … SET deleted_at = now()`. Child invisibility: `ModulesService.findOne` joins `courses` and returns 404 if course is deleted; same for lessons and tasks—deleting a course hides all children.
 - **Validation**: Each endpoint that accepts a body uses a Zod schema with `ZodValidationPipe`. Task config is validated in `tasks/validators/task-config.validator.ts` by type (QUIZ: 4 options, correctAnswer in range; etc.). Invalid input → 422 with Zod message.
 - **Quiz grading**: On submit for a QUIZ task, `QuizGraderService` compares `answer.selectedOption` to `config.correctAnswer` and sets status APPROVED/REJECTED and score. Submission create + grading run in a Drizzle transaction. Duplicate submit (same task + student) → 400 (idempotency).
 - **Errors**: Global `AllExceptionsFilter` formats all errors to a standard JSON shape (statusCode, error, message). 401 for auth, 403 for forbidden, 422 for validation.
+- **Observability**: `RequestIdMiddleware` sets or forwards `x-request-id`. `LoggingInterceptor` and `MetricsInterceptor` run on every request. Health: liveness (no DB), readiness (DB `SELECT 1`). Metrics: Prometheus text format at `GET /api/v1/metrics`.
+- **Infrastructure**: Graceful shutdown via `enableShutdownHooks()`. `trust proxy` set to 1 for correct `req.ip` and rate limiting behind a reverse proxy.
 
 ## Setup
 
@@ -163,38 +178,47 @@ Migrations live in `src/database/migrations/`. **Do not edit existing migration 
 Once the server is running, access Swagger documentation at:
 - **URL**: http://localhost:3000/api/docs
 
+All API endpoints are under the base path **http://localhost:3000/api/v1**.
+
 ## API Endpoints
 
+Base path: **`/api/v1`**
+
 ### Authentication
-- `POST /api/auth/login` - Login with email/password
-- `POST /api/auth/refresh` - Refresh access token
-- `POST /api/auth/logout` - Logout (client-side token discard)
+- `POST /api/v1/auth/login` - Login with email/password
+- `POST /api/v1/auth/refresh` - Refresh access token
+- `POST /api/v1/auth/logout` - Logout (client-side token discard)
 
 ### Courses (Teacher/Admin)
-- `POST /api/courses` - Create course
-- `GET /api/courses` - List courses
-- `GET /api/courses/:id` - Get course details
-- `POST /api/courses/:id/modules` - Create module
-- `GET /api/courses/:id/modules` - List modules
+- `POST /api/v1/courses` - Create course
+- `GET /api/v1/courses` - List courses
+- `GET /api/v1/courses/:id` - Get course details
+- `POST /api/v1/courses/:courseId/modules` - Create module
+- `GET /api/v1/courses/:courseId/modules` - List modules
 
 ### Lessons
-- `POST /api/modules/:moduleId/lessons` - Create lesson (Teacher/Admin)
-- `GET /api/modules/:moduleId/lessons` - List lessons
-- `GET /api/modules/:moduleId/lessons/:id` - Get lesson
+- `POST /api/v1/modules/:moduleId/lessons` - Create lesson (Teacher/Admin)
+- `GET /api/v1/modules/:moduleId/lessons` - List lessons
+- `GET /api/v1/modules/:moduleId/lessons/:id` - Get lesson
 
 ### Tasks
-- `POST /api/lessons/:lessonId/tasks` - Create task (Teacher/Admin)
-- `GET /api/lessons/:lessonId/tasks` - List tasks
-- `GET /api/lessons/:lessonId/tasks/:id` - Get task
+- `POST /api/v1/lessons/:lessonId/tasks` - Create task (Teacher/Admin)
+- `GET /api/v1/lessons/:lessonId/tasks` - List tasks
+- `GET /api/v1/lessons/:lessonId/tasks/:id` - Get task
 
 ### Submissions
-- `POST /api/tasks/:id/submit` - Submit task (Student)
-- `GET /api/submissions` - List submissions (Teacher/Admin)
-- `GET /api/submissions/:id` - Get submission
-- `PATCH /api/submissions/:id/review` - Review submission (Teacher/Admin)
+- `POST /api/v1/tasks/:id/submit` - Submit task (Student)
+- `GET /api/v1/submissions` - List submissions (Teacher/Admin)
+- `GET /api/v1/submissions/:id` - Get submission
+- `PATCH /api/v1/submissions/:id/review` - Review submission (Teacher/Admin)
 
 ### Media
-- `POST /api/media/presign` - Get presigned S3 upload URL
+- `POST /api/v1/media/presign` - Get presigned S3 upload URL
+
+### Health & Metrics
+- `GET /api/v1/health` - Liveness (no DB check)
+- `GET /api/v1/health/ready` - Readiness (DB check)
+- `GET /api/v1/metrics` - Prometheus metrics
 
 ## Database Schema
 
@@ -275,13 +299,20 @@ See `backend/.env.example` for all required environment variables.
 
 Required variables:
 - `DATABASE_URL` - PostgreSQL connection string
+- `TEST_DATABASE_URL` - PostgreSQL connection for E2E tests
 - `JWT_ACCESS_SECRET` - Secret for access tokens
 - `JWT_REFRESH_SECRET` - Secret for refresh tokens
-- `AWS_REGION` - AWS region for S3
-- `AWS_S3_BUCKET` - S3 bucket name
-- `AWS_ACCESS_KEY_ID` - AWS access key
-- `AWS_SECRET_ACCESS_KEY` - AWS secret key
+- `JWT_ACCESS_EXPIRES_IN` - Access token TTL (e.g. 15m)
+- `JWT_REFRESH_EXPIRES_IN` - Refresh token TTL (e.g. 7d)
+- `S3_REGION` - S3 region (e.g. us-east-1)
+- `S3_BUCKET` - S3 bucket name
+- `S3_BUCKET_TEST` - S3 bucket for tests (optional)
+- `S3_ACCESS_KEY` - S3 access key
+- `S3_SECRET_KEY` - S3 secret key
+- `S3_ENDPOINT` - Optional; set for MinIO (e.g. http://localhost:9000)
+- `S3_FORCE_PATH_STYLE` - Set to true for MinIO
 - `PORT` - Server port (default: 3000)
+- `LOG_LEVEL` - Optional: info | debug | warn | error (default: production=info, else=debug)
 
 ## Development Scripts
 
@@ -305,3 +336,11 @@ All scripts should be run from the `backend/` directory:
 - Quiz tasks are auto-graded; Audio/Photo require teacher review
 - All endpoints are documented in Swagger
 - Global error handling with standardized error format
+- API is versioned at `api/v1`
+- Rate limiting: 100 requests per 60 seconds per IP (disabled in test)
+- Request ID: set or forwarded via `x-request-id` header
+
+
+## TO FIX LOCAL DEV ENV run this command in backend folder.
+
+-- rm -rf node_modules && pnpm install
