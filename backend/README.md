@@ -15,8 +15,9 @@ A complete Learning Management System backend built with NestJS, Drizzle ORM, Po
 
 ## Tech Stack
 
-- **Runtime**: Node.js 20+
-- **Language**: TypeScript (strict mode)
+- **Runtime**: Node.js 20.x (see `.nvmrc`; use `nvm use` in backend).
+- **Package manager**: pnpm 8.x required. Node 20.x and pnpm 8.x are enforced via `package.json` `engines`.
+- **Language**: TypeScript (strict mode), exact version pinned (no floating compiler).
 - **Framework**: NestJS 11
 - **ORM**: Drizzle
 - **Database**: PostgreSQL 15+

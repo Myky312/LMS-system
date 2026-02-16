@@ -24,8 +24,15 @@
     "test:e2e": "cross-env NODE_ENV=test DOTENV_CONFIG_SUPPRESS_LOGS=true jest --config ./test/jest-e2e.json --runInBand",
     "test:e2e:debug": "cross-env NODE_ENV=test DOTENV_CONFIG_SUPPRESS_LOGS=true jest --config ./test/jest-e2e.json --runInBand --detectOpenHandles"
   },
+  "engines": {
+    "node": ">=20 <21",
+    "pnpm": ">=8 <9"
+  },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
+    "nestjs-pino": "^4.5.0",
+    "pino": "^8.17.0",
+    "pino-pretty": "^10.3.0",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
     "@nestjs/jwt": "^11.0.2",
@@ -74,7 +81,7 @@
     "ts-loader": "^9.5.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.7.3",
+    "typescript": "5.7.3",
     "typescript-eslint": "^8.20.0"
   },
   "jest": {
