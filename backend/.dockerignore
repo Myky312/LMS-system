@@ -1,4 +1,22 @@
 node_modules
 dist
 .env
+.env.*
+!.env.example
 .git
+.gitignore
+# Test and dev artifacts (not needed for build)
+test
+coverage
+*.spec.ts
+*.e2e-spec.ts
+jest-e2e.json
+docs
+# IDE and misc
+.vscode
+.idea
+*.md
+!README.md
+Dockerfile
+.dockerignore
+pnpm-debug.log*

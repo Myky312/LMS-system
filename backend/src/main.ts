@@ -4,12 +4,22 @@ config({ path: '.env' });
 
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './common/filters/http-exception.filter';
-import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    bufferLogs: true,
+  });
+  app.useLogger(app.get(Logger));
+
+  // Graceful shutdown: handle SIGTERM/SIGINT and close connections cleanly
+  app.enableShutdownHooks();
+
+  // Trust first proxy (e.g. Nginx, load balancer). Required for correct req.ip and rate limiting.
+  const expressInstance = app.getHttpAdapter().getInstance();
+  expressInstance.set('trust proxy', 1);
 
   // Global prefix (versioned API)
   app.setGlobalPrefix('api/v1');
@@ -21,9 +31,6 @@ async function bootstrap() {
 
   // Global exception filter
   app.useGlobalFilters(new AllExceptionsFilter());
-
-  // Structured request logging (correlation ID from RequestIdMiddleware)
-  app.useGlobalInterceptors(new LoggingInterceptor());
 
   // Swagger configuration
   const config = new DocumentBuilder()
@@ -50,12 +57,10 @@ async function bootstrap() {
     },
   });
 
-  await app.listen(process.env.PORT ?? 3000);
-  console.log(
-    `Application is running on: http://localhost:${process.env.PORT ?? 3000}/api/v1`,
-  );
-  console.log(
-    `Swagger documentation: http://localhost:${process.env.PORT ?? 3000}/api/docs`,
-  );
+  const port = process.env.PORT ?? 3000;
+  await app.listen(port);
+  const logger = app.get(Logger) as Logger;
+  logger.log(`Application is running on: http://localhost:${port}/api/v1`);
+  logger.log(`Swagger documentation: http://localhost:${port}/api/docs`);
 }
 void bootstrap();

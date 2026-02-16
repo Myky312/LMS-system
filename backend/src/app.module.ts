@@ -5,8 +5,9 @@ import {
   RequestMethod,
 } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
-import { APP_GUARD } from '@nestjs/core';
+import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { LoggerModule } from 'nestjs-pino';
 import { IpThrottlerGuard } from './common/guards/ip-throttler.guard';
 import { AuthModule } from './auth/auth.module';
 import { CoursesModule } from './courses/courses.module';
@@ -16,13 +17,34 @@ import { TasksModule } from './tasks/tasks.module';
 import { SubmissionsModule } from './submissions/submissions.module';
 import { MediaModule } from './media/media.module';
 import { HealthModule } from './health';
+import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
 import databaseConfig from './config/database.config';
 import jwtConfig from './config/jwt.config';
 import s3Config from './config/s3.config';
 
+const LOG_LEVELS = ['info', 'debug', 'warn', 'error'] as const;
+
+function resolveLogLevel(): (typeof LOG_LEVELS)[number] {
+  const env = process.env.LOG_LEVEL?.toLowerCase();
+  if (env && LOG_LEVELS.includes(env as (typeof LOG_LEVELS)[number])) {
+    return env as (typeof LOG_LEVELS)[number];
+  }
+  return process.env.NODE_ENV === 'production' ? 'info' : 'debug';
+}
+
 @Module({
   imports: [
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- @nestjs/pino types
+    LoggerModule.forRoot({
+      pinoHttp: {
+        level: resolveLogLevel(),
+        transport:
+          process.env.NODE_ENV !== 'production'
+            ? { target: 'pino-pretty' }
+            : undefined,
+      },
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env',
@@ -55,6 +77,7 @@ import s3Config from './config/s3.config';
           },
         ]
       : []),
+    { provide: APP_INTERCEPTOR, useClass: LoggingInterceptor },
   ],
 })
 export class AppModule implements NestModule {
