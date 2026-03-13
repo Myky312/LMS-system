@@ -1,4 +1,4 @@
-# LMS Backend - BaitulQuran
+# LMS Backend - ZeekrAcademy
 
 A complete Learning Management System backend built with NestJS, Drizzle ORM, PostgreSQL, and JWT authentication.
 
@@ -53,7 +53,7 @@ A complete Learning Management System backend built with NestJS, Drizzle ORM, Po
 ## Project Structure
 
 ```
-BaitulQuran/
+ZeekrAcademy/
  ├── backend/              # Backend application
  │    ├── src/
  │    │    ├── app.module.ts

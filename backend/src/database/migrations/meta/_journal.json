@@ -8,6 +8,13 @@
       "when": 1771167450772,
       "tag": "0000_heavy_ultragirl",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1741870800000,
+      "tag": "0001_seed_admin_user",
+      "breakpoints": true
     }
   ]
 }
