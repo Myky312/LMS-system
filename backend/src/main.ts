@@ -39,7 +39,7 @@ async function bootstrap() {
 
   // Swagger configuration
   const config = new DocumentBuilder()
-    .setTitle('LMS Backend API')
+    .setTitle('ZeekrAcademy API')
     .setDescription('Learning Management System Backend API Documentation')
     .setVersion('1.0')
     .addBearerAuth(

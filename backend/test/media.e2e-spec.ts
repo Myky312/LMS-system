@@ -15,7 +15,7 @@ describe('Media presign (e2e)', () => {
   let app: INestApplication;
   let accessToken: string;
   // E2E runs with S3_BUCKET overridden to S3_BUCKET_TEST in setup-e2e.ts
-  const testBucket = process.env.S3_BUCKET || 'baitul-quran-media-test';
+  const testBucket = process.env.S3_BUCKET || 'zeekr-academy-media-test';
 
   beforeAll(async () => {
     app = await createTestApp();

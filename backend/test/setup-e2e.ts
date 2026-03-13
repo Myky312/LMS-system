@@ -18,7 +18,7 @@ const testDatabaseUrl = process.env.TEST_DATABASE_URL;
 if (!testDatabaseUrl) {
   throw new Error(
     'TEST_DATABASE_URL is not set in .env. ' +
-      'Set it to a separate test database (e.g. baitulquran_test); it will be synced to app schema before each test run.',
+      'Set it to a separate test database (e.g. zeekracademy_test); it will be synced to app schema before each test run.',
   );
 }
 
@@ -47,7 +47,7 @@ try {
 } catch {
   throw new Error(
     'Failed to run migrations on test database. ' +
-      'Ensure PostgreSQL is running and baitulquran_test exists. ' +
-      'Create it if needed: createdb -U baitul_user baitulquran_test',
+      'Ensure PostgreSQL is running and zeekracademy_test exists. ' +
+      'Create it if needed: createdb -U zeekr_user zeekracademy_test',
   );
 }

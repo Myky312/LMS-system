@@ -9,6 +9,60 @@ Learning Management System (LMS) for structured Islamic education: courses, modu
 
 ---
 
+## Roles and permissions
+
+There are three roles: **ADMIN**, **TEACHER**, **STUDENT**.
+
+- **RolesGuard** + `@Roles(...)` on endpoints: if the user’s role is not in the list, the API returns 403.
+- **ADMIN** is treated as superuser: any endpoint that allows TEACHER or ADMIN allows ADMIN.
+- Besides endpoint access, roles affect **what data** is visible (e.g. course lists, submissions).
+
+| Action | STUDENT | TEACHER | ADMIN |
+|--------|---------|---------|-------|
+| Create course | ❌ | ✅ | ✅ |
+| Create module (in course) | ❌ | ✅ (own courses only) | ✅ |
+| Create lesson (in module) | ❌ | ✅ (own courses only) | ✅ |
+| Create task (in lesson) | ❌ | ✅ (own courses only) | ✅ |
+| Submit task (submit) | ✅ | ❌ | ❌ |
+| List courses | All | Only own | All |
+| View course | Any | Own only | Any |
+| List submissions | ❌ | ✅ (filtered by own courses) | ✅ (all) |
+| Review submission | ❌ | ✅ (own courses) | ✅ |
+
+---
+
+## Data hierarchy: Course → Module → Lesson → Task
+
+Content is strictly nested:
+
+```
+User (createdBy)
+  └── Course
+        └── Module (courseId)
+              └── Lesson (moduleId)
+                    └── Task (lessonId)
+```
+
+- **courses**: `createdBy` → user; owner of the whole chain.
+- **modules**: `courseId` → course.
+- **lessons**: `moduleId` → module.
+- **tasks**: `lessonId` → lesson.
+
+Order within a level is defined by `orderIndex` (modules, lessons). All entities use soft delete (`deleted_at`).
+
+**API routes** follow the same nesting:
+
+| Resource | Create / List | Example |
+|----------|----------------|---------|
+| Courses | `POST/GET /api/v1/courses` | — |
+| Modules | `POST/GET /api/v1/courses/:courseId/modules` | — |
+| Lessons | `POST/GET /api/v1/modules/:moduleId/lessons` | — |
+| Tasks | `POST/GET /api/v1/lessons/:lessonId/tasks` | — |
+
+When creating a lesson or task, the backend checks ownership along this chain (e.g. module → course → `createdBy` = current teacher).
+
+---
+
 ## Run with Docker
 
 Deterministic steps to bring up and verify the full stack (Postgres, Backend, MinIO, Prometheus, Grafana).
@@ -34,7 +88,7 @@ Deterministic steps to bring up and verify the full stack (Postgres, Backend, Mi
    # See what is using 3000
    lsof -i :3000
    # Stop local backend or that process, then start container:
-   docker start baitul-backend
+   docker start zeekr-backend
    ```
 
 ### STEP 1 — Clean Start
@@ -62,13 +116,13 @@ docker compose up --build -d
 If the backend container does not start (status **Created**), port 3000 is likely in use. Stop whatever is on 3000 and run:
 
 ```bash
-docker start baitul-backend
+docker start zeekr-backend
 ```
 
 If backend crashes, read logs:
 
 ```bash
-docker logs baitul-backend
+docker logs zeekr-backend
 ```
 
 ### STEP 3 — Verify Backend (Before Grafana)
@@ -154,11 +208,11 @@ docker ps
 
 Expected containers (all running):
 
-- **baitul-backend**
-- **baitul-postgres**
-- **baitul-minio**
-- **baitul-prometheus**
-- **baitul-grafana**
+- **zeekr-backend**
+- **zeekr-postgres**
+- **zeekr-minio**
+- **zeekr-prometheus**
+- **zeekr-grafana**
 
 ### If Something Breaks
 
@@ -168,4 +222,4 @@ Expected containers (all running):
 | Grafana "cannot connect" to Prometheus | Using `localhost` instead of **`http://prometheus:9090`**; or Prometheus container not running |
 | Backend cannot connect to Postgres | Wrong `DATABASE_URL` or Postgres not healthy before backend starts |
 
-When asking for help, paste **logs** (e.g. `docker logs baitul-backend`), not guesses.
+When asking for help, paste **logs** (e.g. `docker logs zeekr-backend`), not guesses.

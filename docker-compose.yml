@@ -5,17 +5,17 @@ services:
   backend:
     build:
       context: ./backend
-    container_name: baitul-backend
+    container_name: zeekr-backend
     env_file:
       - ./backend/.env.docker
     environment:
       NODE_ENV: production
       PORT: "3000"
-      DATABASE_URL: postgresql://baitul_user:baitul_pass@postgres:5432/baitulquran
+      DATABASE_URL: postgresql://zeekr_user:zeekr_pass@postgres:5432/zeekracademy
       S3_ENDPOINT: http://minio:9000
       S3_FORCE_PATH_STYLE: "true"
       S3_REGION: us-east-1
-      S3_BUCKET: baitul-quran-media
+      S3_BUCKET: zeekr-academy-media
     ports:
       - "3000:3000"
     depends_on:
@@ -26,24 +26,24 @@ services:
 
   postgres:
     image: postgres:15
-    container_name: baitul-postgres
+    container_name: zeekr-postgres
     environment:
-      POSTGRES_USER: baitul_user
-      POSTGRES_PASSWORD: baitul_pass
-      POSTGRES_DB: baitulquran
+      POSTGRES_USER: zeekr_user
+      POSTGRES_PASSWORD: zeekr_pass
+      POSTGRES_DB: zeekracademy
     ports:
       - "5432:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U baitul_user -d baitulquran"]
+      test: ["CMD-SHELL", "pg_isready -U zeekr_user -d zeekracademy"]
       interval: 5s
       timeout: 3s
       retries: 5
 
   minio:
     image: minio/minio
-    container_name: baitul-minio
+    container_name: zeekr-minio
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: minioadmin
@@ -58,7 +58,7 @@ services:
 
   prometheus:
     image: prom/prometheus
-    container_name: baitul-prometheus
+    container_name: zeekr-prometheus
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
     ports:
@@ -66,7 +66,7 @@ services:
 
   grafana:
     image: grafana/grafana
-    container_name: baitul-grafana
+    container_name: zeekr-grafana
     ports:
       - "3001:3000"
     depends_on:
