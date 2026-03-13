@@ -1,4 +1,4 @@
-# BaitulQuran
+# ZeekrAcademy
 
 Learning Management System (LMS) for structured Islamic education: courses, modules, lessons, and tasks (quiz, audio, photo) with teacher/student roles, submissions, and media via S3.
 
