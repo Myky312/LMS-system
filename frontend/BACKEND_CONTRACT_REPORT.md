@@ -234,9 +234,13 @@ Update/Delete в контроллере не просматривались — 
 - `instructions` — строка, optional
 - `requiredElements` — массив строк (каждая min 1), optional
 
-- **Response 201:** объект задачи. Точный shape (id, lessonId, type, config, …) — проверить по Swagger или реальному ответу.
+- **Response 201:** объект задачи. До реализации list/details страниц фронтендер **обязан** зафиксировать точный набор полей по Swagger или реальному ответу (id, lessonId, type, config и при наличии — createdAt, updatedAt и др.) и обновить contract report.
 - **Response 400:** Invalid task config (в т.ч. Zod errors в body).
 - **Response 403:** Not authorized to create task in this lesson.
+
+- **GET list / GET by id:** до реализации list/details страниц фронтендер **обязан** зафиксировать точный response shape по Swagger или реальному ответу и обновить contract report. Без этого — не переходить к UI.
+
+**Important frontend note (Sprint 3):** По текущему известному контракту config для AUDIO и PHOTO **не содержит** полей для загруженных файлов (audioUrl, photoUrl). Поля `instructions`, `maxDuration`, `requiredElements` задают только условия задания. Загрузка медиа (presign → S3 → URL) относится к **ответам студента (submission answer)**, а не к созданию задачи. Перед тем как встраивать upload в create task UI для AUDIO/PHOTO, подтвердить по Swagger/бэку, что backend действительно ожидает fileUrl в task config при создании; иначе не добавлять.
 
 ---
 
@@ -292,7 +296,7 @@ Update/Delete в контроллере не просматривались — 
 
 - **Response 200:** объект с `uploadUrl` и `fileUrl`.
   - `uploadUrl` — PUT с телом файла на этот URL.
-  - `fileUrl` — значение для сохранения в lesson.videoUrl / task answer (audioUrl/photoUrl). **Точный формат (key vs full URL) не подтверждён в текущей доке — необходимо проверить по бэкенду/Swagger.**
+  - `fileUrl` — может использоваться для полей медиа (например `lesson.videoUrl`) и для URL в ответах студента (submission answer: audioUrl, photoUrl). **В конфиг создания задачи (AUDIO/PHOTO) в текущем контракте не входит** — подтвердить по бэкенду при необходимости. Точный формат (key vs full URL) проверить по Swagger.
 
 ---
 

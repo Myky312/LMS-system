@@ -78,8 +78,8 @@ pnpm start
 **Заглушки / planned:**
 
 - `/courses/[courseId]/edit` — страница есть; редактирование недоступно до появления PATCH на бэке
-- tasks (create/list) — Sprint 3
-- `/submissions` — Sprint 4
+- **Sprint 3:** tasks create/list/detail (QUIZ, AUDIO, PHOTO); media presign helper — подготовка (контракт + опциональный слой, без встраивания в create task UI до подтверждения)
+- **Sprint 4:** submissions, review
 
 ## Структура проекта
 
@@ -134,7 +134,7 @@ frontend/
 - **Delete course** — недоступно, пока нет HTTP endpoint для soft delete.
 - **Current user** — endpoint `/auth/me` отсутствует; пользователь берётся из session state после login/refresh; при перезагрузке — один раз refresh по refresh token, при неуспехе — очистка сессии и редирект на `/login`.
 - **Reorder UI** — реализовано: кнопки «Reorder modules» / «Reorder lessons», drag-and-drop в модалках (dnd-kit), Save/Cancel, сохранение через reorder endpoints, инвалидация после Save.
-- **Lessons / Tasks / Submissions** — полный CRUD и ревью ещё не реализованы на фронте (Sprint 2–4).
+- **Lessons** — create/list/detail + reorder реализованы. **Tasks** — planned for Sprint 3. **Submissions/review** — planned for Sprint 4.
 
 ## Документация
 

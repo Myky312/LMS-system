@@ -1,154 +1,155 @@
-# Sprint 3 — Tasks + Media Presign Checklist
+# Sprint 3 — Tasks (CRUD-light) + Media Presign Prep
 
 **Легенда:** `[x]` сделано · `[~]` заблокировано · `[ ]` не сделано
 
-**Цель:** замкнуть иерархию Course → Module → Lesson → **Task**. Teacher/admin создаёт задания в уроке; типы задач (QUIZ, AUDIO, PHOTO) с разным config; загрузка медиа через presign → S3 → сохранение `fileUrl` в ответ задачи или в ответ студента (Sprint 4).
+**Цель Sprint 3:** Task CRUD-light — create, list, detail для типов QUIZ, AUDIO, PHOTO. Без обязательного media upload в создании задачи. Presign helper можно подготовить как технический слой, но **не встраивать в create task UI**, пока контракт не подтверждён.
 
-**Не делать в Sprint 3:** reorder tasks, submissions flow (Sprint 4), video player в уроке, edit/delete task (если бэк не даёт).
+**Не делать в Sprint 3:** reorder tasks, submissions / review (Sprint 4), video player в уроке, edit/delete task (если бэка нет), upload файла в формах создания AUDIO/PHOTO (см. контракт ниже).
 
-**Порядок работ — жёсткий:** сначала контракт и типы, потом media helper, потом task schemas и UI. Не наоборот.
-
----
-
-## 0. Перед стартом — зафиксировать контракт
-
-### 0.1 Media Presign
-
-- [ ] **POST /media/presign** — request: fileName, contentType (min 1). Response 200: объект с полями?
-  - [ ] Зафиксировать точные имена полей в ответе: `uploadUrl`, `fileUrl` или иначе (по Swagger/бэку).
-  - [ ] Уточнить формат `fileUrl`: полный URL для отображения/сохранения или только key; куда подставлять в task config (AUDIO → audioUrl, PHOTO → photoUrl и т.д.).
-- [ ] Проверить CORS / домены, если загрузка идёт с фронта напрямую на S3 (presigned PUT).
-
-### 0.2 Task shapes
-
-- [ ] **POST /lessons/:lessonId/tasks** — полиморфный body: `type` (QUIZ | AUDIO | PHOTO) + `config` по типу.
-- [ ] Зафиксировать в BACKEND_CONTRACT_REPORT (или отдельной заметке):
-  - [ ] **QUIZ:** config: question (str min 1), options (массив ровно 4 строки, каждая min 1), correctAnswer (0..3).
-  - [ ] **AUDIO:** config: instructions? (str), maxDuration? (int, секунды).
-  - [ ] **PHOTO:** config: instructions? (str), requiredElements? (массив строк, каждая min 1).
-- [ ] **GET /lessons/:lessonId/tasks** — массив Task; точные поля (id, lessonId, type, config, …) по ответу.
-- [ ] **GET /lessons/:lessonId/tasks/:id** — один Task.
-- [ ] PATCH/DELETE task — есть ли в бэке; если нет — на фронте только list/create/detail, без edit/delete.
+**Порядок работ:** сначала подтвердить контракт → типы → опционально media helper → task API → Zod schemas → UI. Не наоборот.
 
 ---
 
-## 1. Документация
+## Перед тем как кодить — ответить на 3 вопроса
 
-- [ ] Обновить **BACKEND_CONTRACT_REPORT.md**: секция Media — точный response shape presign; секция Tasks — точные config shapes по типам, response 201/200.
-- [ ] Отметить в Known backend gaps: что подтверждено, что нет (например fileUrl format).
+Пока фронтендер не ответил по Swagger / реальному ответу бэка, в UI лезть рано.
 
----
-
-## 2. Типы и контракт на фронте
-
-- [ ] **types/domain.ts** (или отдельный файл): типы под task config по видам:
-  - [ ] QuizTaskConfig, AudioTaskConfig, PhotoTaskConfig (совпадают с бэком).
-  - [ ] Task с type и config (discriminated union или общий config).
-- [ ] Зафиксировать в коде/комментарии: соответствие полей config бэкенду (question, options, correctAnswer; instructions, maxDuration; requiredElements).
+1. **Что именно возвращает POST /media/presign?** (точные имена полей, формат `fileUrl` — полный URL или key.)
+2. **Нужен ли загруженный файл при create task для AUDIO/PHOTO?** По текущему контракту — **нет**: config AUDIO = instructions, maxDuration; config PHOTO = instructions, requiredElements. URL файлов — это данные **submission answer**, а не task config. Подтвердить по бэку.
+3. **Что именно приходит в GET /lessons/:lessonId/tasks и GET /lessons/:lessonId/tasks/:id?** (поля, shape config по типам.)
 
 ---
 
-## 3. Media helper (presign flow)
+## Часть A. Confirm before coding
+
+### A.1 Media Presign (подготовительный блок)
+
+- [ ] Подтвердить точный **response shape** POST /media/presign (имена полей: uploadUrl, fileUrl или иначе).
+- [ ] Подтвердить формат **fileUrl** (полный URL vs key).
+- [ ] Выяснить: нужен ли presign **для create task** в Sprint 3, или только для student submissions (Sprint 4).
+- [ ] **Если presign не нужен для create task** — media helper в Sprint 3 реализовать отдельно (presign + upload), **не встраивать в create task form**. Встраивать только после явного подтверждения контракта.
+
+### A.2 Task contract
+
+- [ ] **POST /lessons/:lessonId/tasks** — body: type (QUIZ | AUDIO | PHOTO) + config по типу. Зафиксировать в BACKEND_CONTRACT_REPORT:
+  - **QUIZ:** question (str min 1), options (массив ровно 4 строки, каждая min 1), correctAnswer (0..3).
+  - **AUDIO:** instructions? (str), maxDuration? (int, секунды). **Без audioUrl в config.**
+  - **PHOTO:** instructions? (str), requiredElements? (массив строк, каждая min 1). **Без photoUrl в config.**
+- [ ] **GET** list и GET by id — точные поля (id, lessonId, type, config, …) по ответу.
+- [ ] PATCH/DELETE task — есть ли; если нет — на фронте только list/create/detail.
+
+---
+
+## Часть B. Implement
+
+### B.1 Документация
+
+- [ ] Обновить **BACKEND_CONTRACT_REPORT.md**: Tasks — точные config shapes, response 201; Media — response shape presign (по мере подтверждения). Полное объяснение про AUDIO/PHOTO и upload — уже в контракте (Important frontend note); в чеклисте не дублировать.
+
+### B.2 Типы (domain)
+
+- [ ] **types/domain.ts**: QuizTaskConfig, AudioTaskConfig, PhotoTaskConfig (без полей audioUrl/photoUrl в config).
+- [ ] Task: type + config (**discriminated union по type**). В UI: ветвление по `task.type`, сужение `config` по типу; **не** обращаться к `task.config` «на глаз» и не кастить в `any` — иначе TypeScript станет декоративным.
+- [ ] Соответствие полей бэкенду зафиксировать в коде/комментарии.
+
+### B.3 Media helper (technical preparation only)
 
 - [ ] **features/media/** или **lib/media/**:
-  - [ ] Функция (или хук) для получения presign: POST /media/presign с `fileName`, `contentType`; возврат `uploadUrl` и `fileUrl`.
-  - [ ] Функция загрузки файла на `uploadUrl` (PUT с телом файла); обработка ошибок сети.
-  - [ ] Опционально: общий helper «получить presign → загрузить файл → вернуть fileUrl» для использования в формах AUDIO/PHOTO.
-- [ ] Не тянуть в UI «сырой» presign до тех пор, пока не зафиксирован контракт (имена полей, формат fileUrl).
+  - [ ] Функция получения presign: POST /media/presign → возврат полей из контракта (uploadUrl, fileUrl после подтверждения).
+  - [ ] Функция загрузки файла на uploadUrl (PUT); обработка ошибок.
+- [ ] **Sprint 3: только техническая подготовка.** Не встраивать в create task form; не подключать к UI без подтверждённого контракта.
 
----
+### B.4 Task API и хуки
 
-## 4. Task API и хуки
+- [ ] **features/tasks/api/tasks-api.ts**: createTask(lessonId, payload), fetchTasks(lessonId), fetchTask(lessonId, taskId).
+- [ ] **features/tasks/hooks/use-tasks.ts**: useTasksQuery(lessonId), useTaskQuery(lessonId, taskId), useCreateTaskMutation(lessonId); onSuccess invalidate tasks list.
+- [ ] Payload-типы по типам задач (CreateQuizTaskPayload, CreateAudioTaskPayload, CreatePhotoTaskPayload) без полей file/url в config.
 
-- [ ] **features/tasks/api/tasks-api.ts** (или аналог):
-  - [ ] createTask(lessonId, payload): POST /lessons/:lessonId/tasks; payload = { type, config }.
-  - [ ] fetchTasks(lessonId), fetchTask(lessonId, taskId).
-- [ ] **features/tasks/hooks/use-tasks.ts** (или аналог):
-  - [ ] useTasksQuery(lessonId), useTaskQuery(lessonId, taskId).
-  - [ ] useCreateTaskMutation(lessonId); onSuccess — invalidate tasks list (и при необходимости lesson/cache).
-- [ ] Типы payload по типам задач (CreateQuizTaskPayload, CreateAudioTaskPayload, CreatePhotoTaskPayload) в соответствии с контрактом.
+### B.5 Task type schemas (Zod)
 
----
-
-## 5. Task type schemas (Zod)
-
-- [ ] Схемы валидации под каждый тип задачи (совпадают с бэком):
-  - [ ] QUIZ: question min 1; options array length 4, каждый элемент min 1; correctAnswer 0..3.
-  - [ ] AUDIO: instructions optional string; maxDuration optional positive integer.
-  - [ ] PHOTO: instructions optional string; requiredElements optional array of strings min 1.
+- [ ] **QUIZ:**
+  - [ ] question — min 1, trim.
+  - [ ] options — массив ровно 4; каждый элемент min 1 после trim; не допускать пустые строки.
+  - [ ] correctAnswer — число 0..3 (индекс существующего option).
+- [ ] **AUDIO:**
+  - [ ] instructions — optional string, trim.
+  - [ ] maxDuration — optional; если передан — целое положительное.
+- [ ] **PHOTO:**
+  - [ ] instructions — optional string, trim.
+  - [ ] requiredElements — optional array; пустые элементы после trim удалять перед submit (не отправлять `["", "tajweed"]`).
 - [ ] Общая схема create task: type enum + config по type (discriminated union).
 - [ ] Использовать в формах (React Hook Form + zodResolver).
 
----
+### B.6 Create task UI
 
-## 6. Create task UI
-
-- [ ] Страница (или модалка) создания задания: **маршрут** `/courses/[courseId]/modules/[moduleId]/lessons/[lessonId]/tasks/new` (или аналог по текущему роутингу).
-- [ ] Выбор типа задачи: QUIZ | AUDIO | PHOTO.
-- [ ] Форма по типу:
-  - [ ] **QUIZ:** поля question, 4 options, выбор correctAnswer (индекс 0..3).
-  - [ ] **AUDIO:** instructions (optional), maxDuration (optional); загрузка файла через presign → сохранение fileUrl в config (если бэк ожидает audioUrl в config при создании — уточнить по контракту).
-  - [ ] **PHOTO:** instructions (optional), requiredElements (optional); загрузка через presign при необходимости (если создание задачи уже требует photoUrl — уточнить).
-- [ ] Submit → POST create task; при успехе redirect на task details или назад к списку задач.
+- [ ] Маршрут: `/courses/[courseId]/modules/[moduleId]/lessons/[lessonId]/tasks/new` (или аналог по роутингу).
+- [ ] Выбор типа: QUIZ | AUDIO | PHOTO.
+- [ ] **Формы по типу — жёстко:**
+  - [ ] **QUIZ:** question, 4 options, выбор correctAnswer (0..3). Полноценная форма.
+  - [ ] **AUDIO:** только instructions, maxDuration. **Не делать upload в Sprint 3.**
+  - [ ] **PHOTO:** только instructions, requiredElements. **Не делать upload в Sprint 3.**
+- [ ] Явно: пока не подтверждено, что backend ждёт fileUrl в task config при создании, полей загрузки файла в create task для AUDIO/PHOTO не делать.
+- [ ] Submit → POST create task; при успехе redirect на task details или к списку задач.
 - [ ] Обработка 400 (валидация config), 403, loading, ошибка сети.
 
-**Важно:** если для AUDIO/PHOTO бэк при создании задачи не принимает fileUrl, а файл загружается позже (например при submit студентом), то в Sprint 3 форма create task для AUDIO/PHOTO не должна требовать загрузку файла — только config (instructions и т.д.). Зафиксировать в контракте.
+### B.7 Task details page
 
----
+- [ ] Маршрут: `/courses/.../lessons/[lessonId]/tasks/[taskId]`.
+- [ ] **По типам отображать явно:**
+  - [ ] **QUIZ:** question, 4 options, выделение/подпись правильного ответа (correctAnswer).
+  - [ ] **AUDIO:** instructions, maxDuration.
+  - [ ] **PHOTO:** instructions, список requiredElements.
+- [ ] Кнопка «Back to lesson».
+- [ ] PageLoader, NotFoundState, ForbiddenState.
+- [ ] **Не добавлять** элементы Submit (студент) / Review (teacher) — это Sprint 4.
 
-## 7. Task details page
+### B.8 Интеграция на странице урока
 
-- [ ] **Маршрут:** `/courses/.../lessons/[lessonId]/tasks/[taskId]`.
-- [ ] Отображение типа задачи и config (question + options + correct для QUIZ; instructions и т.д. для AUDIO/PHOTO).
-- [ ] Ссылка/кнопка «Back to lesson».
-- [ ] PageLoader, NotFoundState, ForbiddenState при необходимости.
-- [ ] Заглушки для «Submit» (студент) / «Review» (teacher) не делать в Sprint 3, если это Sprint 4.
-
----
-
-## 8. Lessons list / lesson details — интеграция
-
-- [ ] На странице урока: блок Tasks не заглушка — список задач (useTasksQuery), ссылки на task details.
-- [ ] Кнопка «Create task» ведёт на страницу создания задания (выбор типа + форма).
+- [ ] Блок Tasks: список задач (useTasksQuery), ссылки на task details.
+- [ ] Список сортировать стабильно по правилу, подтверждённому контрактом (например по id или createdAt, если бэк отдаёт; fallback по id).
+- [ ] Карточка задачи в списке должна показывать тип + **summary по правилу (не JSON.stringify(config)):**
+  - [ ] **QUIZ:** первая строка/фрагмент `question` (или полный question, если короткий).
+  - [ ] **AUDIO:** `instructions` или fallback «Audio task»; при наличии `maxDuration` — отдельная подпись (например «max N sec»).
+  - [ ] **PHOTO:** `instructions` или fallback «Photo task»; при наличии `requiredElements` — подпись с количеством (например «N elements»).
+- [ ] Кнопка «Create task» → страница создания (выбор типа + форма).
 - [ ] Empty state: «No tasks yet» + кнопка Create task.
 
 ---
 
-## 9. Edge cases и проверки
+## Часть C. Edge cases и проверки
 
-- [ ] Два элемента с одинаковым orderIndex (если у tasks есть orderIndex): список не ломается, сортировка стабильна (например по id).
-- [ ] Presign: истёкший URL / ошибка загрузки — сообщение пользователю, не терять введённые данные формы где возможно.
-- [ ] Create task: не отправлять fileUrl для AUDIO/PHOTO, если бэк не ожидает его при создании (контракт).
-- [ ] 400 по config (Zod на бэке) — показывать ошибки валидации в форме.
+- [ ] Список задач: стабильная сортировка по полю из контракта (id, createdAt и т.д.); при равенстве — по id.
+- [ ] 400 по config — показывать ошибки валидации в форме.
+- [ ] Create task: не отправлять fileUrl / audioUrl / photoUrl в config для AUDIO/PHOTO по текущему контракту.
 
 ---
 
-## 10. Deliverable — отчёт по итогу Sprint 3
+## Deliverable — отчёт по итогу Sprint 3
 
 **Implemented**
 
-- Presign: контракт зафиксирован; media helper (presign + upload); использование в create task при необходимости.
-- Task types и Zod schemas (QUIZ, AUDIO, PHOTO) в соответствии с бэком.
+- Task contract подтверждён и зафиксирован; task types (domain); Zod schemas (QUIZ, AUDIO, PHOTO без upload в config).
 - Task API + hooks (create, list, detail).
-- Create task UI (выбор типа, формы по типу, submit, redirect).
-- Task details page (тип, config, back to lesson).
-- Список задач на странице урока, кнопка Create task.
+- Create task page (QUIZ полная форма; AUDIO/PHOTO только instructions + maxDuration / requiredElements, без upload).
+- Task details page (по типам: question/options/correct, instructions/maxDuration, instructions/requiredElements).
+- Список задач на странице урока (тип + summary, стабильная сортировка).
+- Media presign: контракт уточнён; media helper при необходимости реализован отдельно, **не в create task UI** (если контракт не требовал).
 
 **Verified contract**
 
-- Presign request/response; формат fileUrl; куда подставлять (task config / submission).
 - Task create request body по типам; response 201.
 - Task list/detail response shapes.
+- Presign: response shape; решение по использованию в create task (да/нет).
 
 **Blockers**
 
 - Расхождения с Swagger/бэком по config или presign.
-- Отсутствие PATCH/DELETE task (если нужно edit — заблокировано).
+- Отсутствие PATCH/DELETE task.
 
 **Evidence**
 
-- Скрин: страница урока со списком задач.
-- Скрин: создание задачи (QUIZ и один из AUDIO/PHOTO).
+- Скрин: страница урока со списком задач (тип + summary).
+- Скрин: создание задачи QUIZ и AUDIO или PHOTO (без upload).
 - Скрин: страница деталей задачи.
 - Обновления README / BACKEND_CONTRACT_REPORT.
 
@@ -156,13 +157,13 @@
 
 ## Краткий порядок работ (не нарушать)
 
-1. Зафиксировать контракт: presign response shape, fileUrl; task config по типам; GET list/detail.
-2. Обновить BACKEND_CONTRACT_REPORT (Media, Tasks).
-3. Типы domain (task configs, Task).
-4. Media helper (presign, upload, возврат fileUrl).
-5. Task API + hooks.
-6. Zod schemas для create task по типам.
-7. Create task UI (страница/модалка, выбор типа, формы).
-8. Task details page.
-9. Интеграция: список задач на странице урока, Create task.
-10. Прогнать сценарии, edge cases; написать отчёт.
+1. Ответить на 3 вопроса (presign response; нужен ли upload при create task; GET tasks shape).
+2. Зафиксировать контракт (A.1, A.2), обновить BACKEND_CONTRACT_REPORT (B.1).
+3. Типы domain (B.2).
+4. Опционально: media helper (B.3), без подключения к create task form.
+5. Task API + hooks (B.4).
+6. Zod schemas (B.5).
+7. Create task UI (B.6).
+8. Task details page (B.7).
+9. Интеграция на странице урока (B.8).
+10. Edge cases; отчёт.

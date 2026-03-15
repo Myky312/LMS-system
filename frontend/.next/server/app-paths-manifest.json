@@ -1,8 +1,0 @@
-{
-  "/(panel)/courses/[courseId]/modules/[moduleId]/page": "app/(panel)/courses/[courseId]/modules/[moduleId]/page.js",
-  "/(panel)/courses/[courseId]/page": "app/(panel)/courses/[courseId]/page.js",
-  "/(panel)/courses/[courseId]/modules/[moduleId]/lessons/new/page": "app/(panel)/courses/[courseId]/modules/[moduleId]/lessons/new/page.js",
-  "/(panel)/courses/[courseId]/modules/[moduleId]/lessons/[lessonId]/page": "app/(panel)/courses/[courseId]/modules/[moduleId]/lessons/[lessonId]/page.js",
-  "/(panel)/submissions/page": "app/(panel)/submissions/page.js",
-  "/(panel)/courses/page": "app/(panel)/courses/page.js"
-}
