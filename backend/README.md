@@ -170,8 +170,13 @@ Migrations live in `src/database/migrations/`. **Do not edit existing migration 
 
 ### Folder layout
 
+- **No separate `drizzle` folder** — only `drizzle.config.ts` (for local/CI) and `src/database/` (connection, schema, migrations).
 - `src/database/migrations/0000_*.sql`, `0001_*.sql`, … — migration files (one per schema change).
 - `src/database/migrations/meta/` — Drizzle journal and snapshots; keep as-is.
+
+### Docker
+
+When running via Docker Compose, the backend container runs migrations on startup (then starts the API). No need to run `db:migrate` manually.
 
 ## API Documentation
 

@@ -113,6 +113,8 @@ docker compose up --build -d
 
 **Expected:** Postgres → healthcheck passes → Backend builds and starts (after Postgres healthy) → MinIO, Prometheus, Grafana start.
 
+**Migrations:** When the backend container starts, it runs DB migrations (including the admin user seed) and then starts the API. No separate migrate step needed.
+
 If the backend container does not start (status **Created**), port 3000 is likely in use. Stop whatever is on 3000 and run:
 
 ```bash
