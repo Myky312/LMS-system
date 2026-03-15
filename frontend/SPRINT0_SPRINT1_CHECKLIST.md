@@ -2,7 +2,7 @@
 
 **Легенда:** `[x]` сделано · `[~]` заблокировано (backend/другое) · `[ ]` не сделано
 
-**Текущий статус:** Sprint 0 и Sprint 1 реализованы. Edit/delete course — заблокированы отсутствием PATCH/DELETE на бэке. Дальше: Sprint 2 (lessons), Sprint 3 (media + tasks), Sprint 4 (submissions).
+**Текущий статус:** Sprint 0 и Sprint 1 реализованы. Edit/delete course — заблокированы отсутствием PATCH/DELETE на бэке. **Дальше:** Sprint 2 (lessons) — см. **[SPRINT2_CHECKLIST.md](./SPRINT2_CHECKLIST.md)**; затем Sprint 3 (media + tasks), Sprint 4 (submissions).
 
 ---
 
@@ -136,4 +136,5 @@ pnpm dev
 ## Текущее состояние (кратко)
 
 - **Sprint 0:** foundation, api client, auth/session (token strategy зафиксирована в contract), panel layout, route protection, общие UI-состояния.
-- **Sprint 1:** login, courses list/create/detail, modules list/create/detail; edit course — [~] blocked; delete course — [ ]; lessons/tasks/submissions — заглушки, Sprint 2–4.
+- **Sprint 1:** login, courses list/create/detail, modules list/create/detail; edit course — [~] blocked; delete course — [ ]; lessons/tasks/submissions — заглушки.
+- **Sprint 2:** см. [SPRINT2_CHECKLIST.md](./SPRINT2_CHECKLIST.md) — lessons CRUD, без tasks/media/submissions.

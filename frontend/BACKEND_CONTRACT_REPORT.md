@@ -143,13 +143,24 @@ Update/Delete в контроллере не просматривались — 
 
 - **Request:** `application/json`
   ```json
-  { "title": "Module 1: Basics", "orderIndex": 0 }
+  { "title": "Module 1: Basics" }
   ```
   - `title` — строка, min 1
-  - `orderIndex` — число int ≥ 0, optional
+  - `orderIndex` — optional; если не передан, бэк ставит модуль в конец (max + 1).
+- **Фронт:** форма создания модуля **не содержит** orderIndex; только title. Backend сам кладёт новый элемент в конец.
 
 - **Response 201:** объект модуля. Точный shape (id, courseId, title, orderIndex, …) — проверить по Swagger или реальному ответу.
 - **Response 403:** Not authorized to create module in this course.
+
+### Reorder modules
+
+- **PATCH** `/courses/:courseId/modules/reorder` (TEACHER, ADMIN)
+- **Request:** `application/json`
+  ```json
+  { "items": [ { "id": "module-uuid-1", "orderIndex": 0 }, { "id": "module-uuid-2", "orderIndex": 1 } ] }
+  ```
+  - Все `id` должны принадлежать данному курсу; иначе 400.
+- **Response 200:** body — обновлённый список модулей курса (массив, тот же shape что GET list). Не 204, не message-only; фронт может использовать ответ для обновления кэша при необходимости.
 
 ---
 
@@ -167,17 +178,24 @@ Update/Delete в контроллере не просматривались — 
 
 - **Request:** `application/json`
   ```json
-  {
-    "title": "Lesson 1: Introduction",
-    "videoUrl": "https://example.com/video.mp4",
-    "orderIndex": 0
-  }
+  { "title": "Lesson 1: Introduction", "videoUrl": "https://example.com/video.mp4" }
   ```
   - `title` — строка, min 1
   - `videoUrl` — строка, URL, optional
-  - `orderIndex` — int ≥ 0, optional
+  - `orderIndex` — optional; если не передан, бэк ставит урок в конец (max + 1).
+- **Фронт:** форма создания урока **не содержит** orderIndex; только title и videoUrl. Backend сам кладёт новый элемент в конец.
 
 - **Response 201:** объект урока. Точный shape (id, moduleId, title, videoUrl, orderIndex, …) — проверить по Swagger или реальному ответу.
+
+### Reorder lessons
+
+- **PATCH** `/modules/:moduleId/lessons/reorder` (TEACHER, ADMIN)
+- **Request:** `application/json`
+  ```json
+  { "items": [ { "id": "lesson-uuid-1", "orderIndex": 0 }, { "id": "lesson-uuid-2", "orderIndex": 1 } ] }
+  ```
+  - Все `id` должны принадлежать данному модулю; иначе 400.
+- **Response 200:** body — обновлённый список уроков модуля (массив, тот же shape что GET list). Не 204, не message-only; фронт может использовать ответ для обновления кэша при необходимости.
 
 ---
 

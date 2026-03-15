@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Body,
   Param,
   UseGuards,
@@ -16,6 +17,10 @@ import {
 } from '@nestjs/swagger';
 import { LessonsService } from './lessons.service';
 import { CreateLessonDto, createLessonSchema } from './dto/create-lesson.dto';
+import {
+  ReorderLessonsDto,
+  reorderLessonsSchema,
+} from './dto/reorder-lessons.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -50,6 +55,27 @@ export class LessonsController {
   @ApiResponse({ status: 200, description: 'List of lessons' })
   async findAll(@Param('moduleId') moduleId: string) {
     return this.lessonsService.findAll(moduleId);
+  }
+
+  @Patch('reorder')
+  @UseGuards(RolesGuard)
+  @Roles(UserRole.TEACHER, UserRole.ADMIN)
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Reorder lessons in a module' })
+  @ApiResponse({ status: 200, description: 'Lessons reordered' })
+  @ApiResponse({ status: 400, description: 'Invalid items' })
+  @ApiResponse({ status: 403, description: 'Not authorized' })
+  async reorder(
+    @Param('moduleId') moduleId: string,
+    @Body(new ZodValidationPipe(reorderLessonsSchema))
+    reorderDto: ReorderLessonsDto,
+    @CurrentUser() user: { userId: string; role: string },
+  ) {
+    return this.lessonsService.reorder(
+      moduleId,
+      reorderDto.items,
+      user.userId,
+    );
   }
 
   @Get(':id')

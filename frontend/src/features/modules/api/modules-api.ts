@@ -1,7 +1,7 @@
 import { authApi } from "@/lib/api/axios-client";
 import type { Module } from "@/types/domain";
 
-export type CreateModulePayload = { title: string; orderIndex?: number };
+export type CreateModulePayload = { title: string };
 
 export async function fetchModulesByCourse(courseId: string): Promise<Module[]> {
   const { data } = await authApi.get<Module[]>(`/courses/${courseId}/modules`);

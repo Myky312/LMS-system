@@ -13,7 +13,6 @@ import { Label } from "@/components/ui/label";
 
 const schema = z.object({
   title: z.string().min(1, "Title is required"),
-  orderIndex: z.coerce.number().int().min(0).optional(),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -28,14 +27,11 @@ export default function NewModulePage({
   const create = useCreateModuleMutation(courseId);
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
-    defaultValues: { title: "", orderIndex: 0 },
+    defaultValues: { title: "" },
   });
 
   const onSubmit = form.handleSubmit(async (values) => {
-    const mod = await create.mutateAsync({
-      title: values.title,
-      orderIndex: values.orderIndex,
-    });
+    const mod = await create.mutateAsync({ title: values.title });
     router.push(`/courses/${courseId}/modules/${mod.id}`);
   });
 
@@ -54,10 +50,6 @@ export default function NewModulePage({
           {form.formState.errors.title && (
             <p className="text-sm text-destructive">{form.formState.errors.title.message}</p>
           )}
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="orderIndex">Order index</Label>
-          <Input id="orderIndex" type="number" min={0} {...form.register("orderIndex")} />
         </div>
         <Button type="submit" disabled={create.isPending}>
           {create.isPending ? "Creating…" : "Create"}

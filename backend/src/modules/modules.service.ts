@@ -2,10 +2,11 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { db } from '../database/drizzle';
 import { modules, courses } from '../database/schema';
-import { eq, desc, and } from 'drizzle-orm';
+import { eq, desc, and, inArray } from 'drizzle-orm';
 import { CreateModuleDto } from './dto/create-module.dto';
 import { CoursesService } from '../courses/courses.service';
 import { whereConditions, notDeleted } from '../common/utils/soft-delete.util';
@@ -95,5 +96,46 @@ export class ModulesService {
         'You can only access modules in your own courses',
       );
     }
+  }
+
+  /**
+   * Reorder modules within a course. All ids must belong to the course.
+   * Updates orderIndex in a transaction.
+   */
+  async reorder(
+    courseId: string,
+    items: Array<{ id: string; orderIndex: number }>,
+    userId: string,
+  ) {
+    await this.coursesService.findOne(courseId, 'TEACHER', userId);
+
+    const ids = items.map((i) => i.id);
+    const existing = await db
+      .select({ id: modules.id })
+      .from(modules)
+      .where(
+        and(
+          eq(modules.courseId, courseId),
+          notDeleted(modules.deletedAt),
+          inArray(modules.id, ids),
+        ),
+      );
+
+    if (existing.length !== ids.length) {
+      throw new BadRequestException(
+        'All module ids must belong to this course and exist',
+      );
+    }
+
+    await db.transaction(async (tx) => {
+      for (const { id, orderIndex } of items) {
+        await tx
+          .update(modules)
+          .set({ orderIndex })
+          .where(eq(modules.id, id));
+      }
+    });
+
+    return this.findAll(courseId);
   }
 }

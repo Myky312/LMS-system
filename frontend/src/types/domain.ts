@@ -76,3 +76,12 @@ export type AppError = {
   message: string;
   errors?: unknown;
 };
+
+export type ReorderItem = {
+  id: string;
+  orderIndex: number;
+};
+
+export type ReorderPayload = {
+  items: ReorderItem[];
+};

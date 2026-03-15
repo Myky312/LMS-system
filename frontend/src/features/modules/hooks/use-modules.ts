@@ -6,7 +6,9 @@ import {
   createModule,
   type CreateModulePayload,
 } from "../api/modules-api";
+import { reorderModules as reorderModulesApi } from "../api/reorder-modules";
 import { coursesKeys } from "@/features/courses/hooks/use-courses";
+import type { ReorderPayload } from "@/types/domain";
 
 export const modulesKeys = {
   all: ["modules"] as const,
@@ -28,6 +30,18 @@ export function useCreateModuleMutation(courseId: string) {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: modulesKeys.list(courseId) });
       qc.invalidateQueries({ queryKey: coursesKeys.all });
+    },
+  });
+}
+
+export function useReorderModulesMutation(courseId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: ReorderPayload) =>
+      reorderModulesApi(courseId, payload),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: modulesKeys.list(courseId) });
+      qc.invalidateQueries({ queryKey: coursesKeys.detail(courseId) });
     },
   });
 }

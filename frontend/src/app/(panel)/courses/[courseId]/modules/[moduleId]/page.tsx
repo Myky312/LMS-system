@@ -1,19 +1,15 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import Link from "next/link";
 import { authApi } from "@/lib/api/axios-client";
 import { useQuery } from "@tanstack/react-query";
-import type { Lesson } from "@/types/domain";
+import { useLessonsQuery } from "@/features/lessons/hooks/use-lessons";
+import { ReorderLessonsDialog } from "@/features/lessons/components/ReorderLessonsDialog";
 import { Button } from "@/components/ui/button";
 import { PageLoader } from "@/components/common/PageLoader";
 import { EmptyState } from "@/components/common/EmptyState";
-import { Plus } from "lucide-react";
-
-async function fetchLessons(moduleId: string): Promise<Lesson[]> {
-  const { data } = await authApi.get<Lesson[]>(`/modules/${moduleId}/lessons`);
-  return data;
-}
+import { Plus, Video, ArrowUpDown } from "lucide-react";
 
 export default function ModuleDetailPage({
   params,
@@ -29,15 +25,17 @@ export default function ModuleDetailPage({
     },
     enabled: !!courseId && !!moduleId,
   });
-  const { data: lessons, isLoading: lessonsLoading } = useQuery({
-    queryKey: ["lessons", moduleId],
-    queryFn: () => fetchLessons(moduleId),
-    enabled: !!moduleId,
-  });
+  const { data: lessons, isLoading: lessonsLoading } = useLessonsQuery(moduleId);
+  const [reorderOpen, setReorderOpen] = useState(false);
 
   if (moduleLoading || !module) return <PageLoader />;
 
-  const sortedLessons = (lessons ?? []).slice().sort((a, b) => a.orderIndex - b.orderIndex);
+  const sortedLessons = (lessons ?? [])
+    .slice()
+    .sort(
+      (a, b) =>
+        a.orderIndex - b.orderIndex || a.id.localeCompare(b.id)
+    );
 
   return (
     <div className="space-y-8">
@@ -51,12 +49,26 @@ export default function ModuleDetailPage({
       <section>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-medium">Lessons</h2>
-          <Button asChild size="sm">
-            <Link href={`/courses/${courseId}/modules/${moduleId}/lessons/new`} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Create lesson
-            </Link>
-          </Button>
+          <div className="flex gap-2">
+            {sortedLessons.length > 1 && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => setReorderOpen(true)}
+              >
+                <ArrowUpDown className="h-4 w-4" />
+                Reorder lessons
+              </Button>
+            )}
+            <Button asChild size="sm">
+              <Link href={`/courses/${courseId}/modules/${moduleId}/lessons/new`} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Create lesson
+              </Link>
+            </Button>
+          </div>
         </div>
         {lessonsLoading ? (
           <div className="h-24 animate-pulse rounded-lg bg-muted" />
@@ -78,18 +90,30 @@ export default function ModuleDetailPage({
               <li key={lesson.id}>
                 <Link
                   href={`/courses/${courseId}/modules/${moduleId}/lessons/${lesson.id}`}
-                  className="block rounded-lg border border-border bg-card p-4 transition-colors hover:bg-accent/50"
+                  className="flex items-center gap-2 rounded-lg border border-border bg-card p-4 transition-colors hover:bg-accent/50"
                 >
                   <span className="font-medium">{lesson.title}</span>
-                  <span className="ml-2 text-sm text-muted-foreground">
-                    Order: {lesson.orderIndex}
+                  <span className="text-sm text-muted-foreground">
+                    #{lesson.orderIndex + 1}
                   </span>
+                  {lesson.videoUrl && (
+                    <span className="inline-flex items-center gap-1 rounded bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                      <Video className="h-3 w-3" />
+                      Video
+                    </span>
+                  )}
                 </Link>
               </li>
             ))}
           </ul>
         )}
       </section>
+      <ReorderLessonsDialog
+        open={reorderOpen}
+        onOpenChange={setReorderOpen}
+        moduleId={moduleId}
+        lessons={sortedLessons}
+      />
     </div>
   );
 }

@@ -1,17 +1,18 @@
 "use client";
 
-import { use } from "react";
+import { use, useState } from "react";
 import { formatDate } from "@/lib/utils/format-date";
 import Link from "next/link";
 import { useCourseQuery } from "@/features/courses/hooks/use-courses";
 import { useModulesQuery } from "@/features/modules/hooks/use-modules";
+import { ReorderModulesDialog } from "@/features/modules/components/ReorderModulesDialog";
 import { Button } from "@/components/ui/button";
 import { PageLoader } from "@/components/common/PageLoader";
 import { PageError } from "@/components/common/PageError";
 import { NotFoundState } from "@/components/common/NotFoundState";
 import { ForbiddenState } from "@/components/common/ForbiddenState";
 import { EmptyState } from "@/components/common/EmptyState";
-import { Plus } from "lucide-react";
+import { Plus, ArrowUpDown } from "lucide-react";
 import { normalizeError } from "@/lib/api/axios-client";
 
 export default function CourseDetailPage({
@@ -20,6 +21,7 @@ export default function CourseDetailPage({
   params: Promise<{ courseId: string }>;
 }) {
   const { courseId } = use(params);
+  const [reorderOpen, setReorderOpen] = useState(false);
   const courseQuery = useCourseQuery(courseId);
   const modulesQuery = useModulesQuery(courseId);
 
@@ -56,12 +58,26 @@ export default function CourseDetailPage({
       <section>
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-medium">Modules</h2>
-          <Button asChild size="sm">
-            <Link href={`/courses/${courseId}/modules/new`} className="gap-2">
-              <Plus className="h-4 w-4" />
-              Create module
-            </Link>
-          </Button>
+          <div className="flex gap-2">
+            {modules.length > 1 && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => setReorderOpen(true)}
+              >
+                <ArrowUpDown className="h-4 w-4" />
+                Reorder modules
+              </Button>
+            )}
+            <Button asChild size="sm">
+              <Link href={`/courses/${courseId}/modules/new`} className="gap-2">
+                <Plus className="h-4 w-4" />
+                Create module
+              </Link>
+            </Button>
+          </div>
         </div>
         {modulesLoading ? (
           <div className="h-24 animate-pulse rounded-lg bg-muted" />
@@ -79,7 +95,10 @@ export default function CourseDetailPage({
           <ul className="space-y-2">
             {modules
               .slice()
-              .sort((a, b) => a.orderIndex - b.orderIndex)
+              .sort(
+                (a, b) =>
+                  a.orderIndex - b.orderIndex || a.id.localeCompare(b.id)
+              )
               .map((mod) => (
                 <li key={mod.id}>
                   <Link
@@ -88,7 +107,7 @@ export default function CourseDetailPage({
                   >
                     <span className="font-medium">{mod.title}</span>
                     <span className="ml-2 text-sm text-muted-foreground">
-                      Order: {mod.orderIndex}
+                      #{mod.orderIndex + 1}
                     </span>
                   </Link>
                 </li>
@@ -96,6 +115,12 @@ export default function CourseDetailPage({
           </ul>
         )}
       </section>
+      <ReorderModulesDialog
+        open={reorderOpen}
+        onOpenChange={setReorderOpen}
+        courseId={courseId}
+        modules={modules}
+      />
     </div>
   );
 }

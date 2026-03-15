@@ -1,7 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { db } from '../database/drizzle';
 import { lessons, modules, courses } from '../database/schema';
-import { eq, desc, and } from 'drizzle-orm';
+import { eq, desc, and, inArray } from 'drizzle-orm';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { ModulesService } from '../modules/modules.service';
 import { whereConditions, notDeleted } from '../common/utils/soft-delete.util';
@@ -95,5 +99,46 @@ export class LessonsService {
   async verifyOwnership(lessonId: string, teacherId: string): Promise<void> {
     const lesson = await this.findOne(lessonId);
     await this.modulesService.verifyOwnership(lesson.moduleId, teacherId);
+  }
+
+  /**
+   * Reorder lessons within a module. All ids must belong to the module.
+   * Updates orderIndex in a transaction.
+   */
+  async reorder(
+    moduleId: string,
+    items: Array<{ id: string; orderIndex: number }>,
+    teacherId: string,
+  ) {
+    await this.modulesService.verifyOwnership(moduleId, teacherId);
+
+    const ids = items.map((i) => i.id);
+    const existing = await db
+      .select({ id: lessons.id })
+      .from(lessons)
+      .where(
+        and(
+          eq(lessons.moduleId, moduleId),
+          notDeleted(lessons.deletedAt),
+          inArray(lessons.id, ids),
+        ),
+      );
+
+    if (existing.length !== ids.length) {
+      throw new BadRequestException(
+        'All lesson ids must belong to this module and exist',
+      );
+    }
+
+    await db.transaction(async (tx) => {
+      for (const { id, orderIndex } of items) {
+        await tx
+          .update(lessons)
+          .set({ orderIndex })
+          .where(eq(lessons.id, id));
+      }
+    });
+
+    return this.findAll(moduleId);
   }
 }

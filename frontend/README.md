@@ -71,13 +71,14 @@ pnpm start
 - `/courses/new` — создание курса
 - `/courses/[courseId]` — детали курса, список модулей
 - `/courses/[courseId]/modules/new` — создание модуля
-- `/courses/[courseId]/modules/[moduleId]` — детали модуля, список уроков
+- `/courses/[courseId]/modules/[moduleId]` — детали модуля, список уроков (с Video badge)
+- `/courses/[courseId]/modules/[moduleId]/lessons/new` — создание урока
+- `/courses/[courseId]/modules/[moduleId]/lessons/[lessonId]` — детали урока, блок Tasks (заглушка)
 
 **Заглушки / planned:**
 
 - `/courses/[courseId]/edit` — страница есть; редактирование недоступно до появления PATCH на бэке
-- `/courses/[courseId]/modules/[moduleId]/lessons/new` — Sprint 2
-- `/courses/[courseId]/modules/[moduleId]/lessons/[lessonId]` — Sprint 2
+- tasks (create/list) — Sprint 3
 - `/submissions` — Sprint 4
 
 ## Структура проекта
@@ -123,20 +124,24 @@ frontend/
 
 - Auth (login, refresh, logout), защита панели, current user в header
 - Courses: список, создание, детали, список модулей внутри курса
-- Modules: создание, детали, список уроков внутри модуля
-- Маршруты lessons / submissions пока заглушки
+- Modules: создание, детали, список уроков (с Video badge); **Reorder modules** (модалка, drag-and-drop)
+- Lessons: создание, детали урока; **Reorder lessons** (модалка, drag-and-drop); блок Tasks — заглушка до Sprint 3
+- Submissions — заглушка (Sprint 4)
 
 ## Known limitations (backend gaps)
 
 - **Edit course** — недоступно, пока бэкенд не отдаёт `PATCH /courses/:id`.
 - **Delete course** — недоступно, пока нет HTTP endpoint для soft delete.
 - **Current user** — endpoint `/auth/me` отсутствует; пользователь берётся из session state после login/refresh; при перезагрузке — один раз refresh по refresh token, при неуспехе — очистка сессии и редирект на `/login`.
+- **Reorder UI** — реализовано: кнопки «Reorder modules» / «Reorder lessons», drag-and-drop в модалках (dnd-kit), Save/Cancel, сохранение через reorder endpoints, инвалидация после Save.
 - **Lessons / Tasks / Submissions** — полный CRUD и ревью ещё не реализованы на фронте (Sprint 2–4).
 
 ## Документация
 
 - **[BACKEND_CONTRACT_REPORT.md](./BACKEND_CONTRACT_REPORT.md)** — контракт API: auth, токены, endpoints, payloads, ошибки, known backend gaps. Сверить с Swagger перед доработками.
 - **[SPRINT0_SPRINT1_CHECKLIST.md](./SPRINT0_SPRINT1_CHECKLIST.md)** — чеклист Sprint 0 и Sprint 1 в формате статусов [x] / [~] / [ ].
+- **[SPRINT2_CHECKLIST.md](./SPRINT2_CHECKLIST.md)** — чеклист Sprint 2 (Lessons + reorder modules/lessons).
+- **[SPRINT3_CHECKLIST.md](./SPRINT3_CHECKLIST.md)** — чеклист Sprint 3 (Tasks + media presign): контракт → типы → media helper → task schemas → create task UI → task details.
 
 ## Тестовый вход
 
