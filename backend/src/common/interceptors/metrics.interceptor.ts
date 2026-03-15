@@ -30,9 +30,9 @@ export class MetricsInterceptor implements NestInterceptor {
         route,
         status,
       };
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- MetricsService Counter/Histogram from prom-client
+
       this.metrics.httpRequestsTotal.inc(labels);
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- MetricsService Histogram from prom-client
+
       this.metrics.httpRequestDuration.observe(labels, durationSeconds);
     };
 

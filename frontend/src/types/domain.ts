@@ -51,12 +51,19 @@ export type PhotoTaskConfig = {
   requiredElements?: string[];
 };
 
-export type Task = {
+/** Base task fields from API (shape confirmed in BACKEND_CONTRACT_REPORT). */
+type TaskBase = {
   id: string;
   lessonId: string;
-  type: TaskType;
-  config: QuizTaskConfig | AudioTaskConfig | PhotoTaskConfig;
+  createdAt: string;
 };
+
+/** Discriminated union: use task.type to narrow config. Do not cast config to any. */
+export type TaskQuiz = TaskBase & { type: "QUIZ"; config: QuizTaskConfig };
+export type TaskAudio = TaskBase & { type: "AUDIO"; config: AudioTaskConfig };
+export type TaskPhoto = TaskBase & { type: "PHOTO"; config: PhotoTaskConfig };
+
+export type Task = TaskQuiz | TaskAudio | TaskPhoto;
 
 export type SubmissionStatus = "PENDING" | "APPROVED" | "REJECTED";
 

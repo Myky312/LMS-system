@@ -18,10 +18,12 @@ export class TasksService {
   async create(
     lessonId: string,
     createTaskDto: CreateTaskDto,
-    teacherId: string,
+    teacherId: string | undefined,
   ) {
-    // Verify lesson exists and teacher owns it (explicit ownership chain check)
-    await this.verifyLessonOwnership(lessonId, teacherId);
+    // ADMIN: teacherId is undefined → skip ownership. TEACHER: verify ownership.
+    if (teacherId != null) {
+      await this.verifyLessonOwnership(lessonId, teacherId);
+    }
 
     // Strict validation - reject invalid config immediately
     validateTaskConfig(createTaskDto.type, createTaskDto.config);

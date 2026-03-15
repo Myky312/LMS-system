@@ -37,7 +37,6 @@ function resolveLogLevel(): (typeof LOG_LEVELS)[number] {
 
 @Module({
   imports: [
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- nestjs-pino LoggerModule
     LoggerModule.forRoot({
       pinoHttp: {
         level: resolveLogLevel(),
@@ -52,7 +51,7 @@ function resolveLogLevel(): (typeof LOG_LEVELS)[number] {
       envFilePath: '.env',
       load: [databaseConfig, jwtConfig, s3Config],
     }),
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access -- @nestjs/throttler
+
     ThrottlerModule.forRoot({
       throttlers: [
         {

@@ -8,6 +8,7 @@ import { PageLoader } from "@/components/common/PageLoader";
 import { NotFoundState } from "@/components/common/NotFoundState";
 import { ForbiddenState } from "@/components/common/ForbiddenState";
 import { normalizeError } from "@/lib/api/axios-client";
+import { PageError } from "@/components/common/PageError";
 
 export default function EditCoursePage({
   params,
@@ -22,7 +23,7 @@ export default function EditCoursePage({
     const err = normalizeError(courseQuery.error);
     if (err.statusCode === 404) return <NotFoundState />;
     if (err.statusCode === 403) return <ForbiddenState />;
-    return null;
+    return <PageError message={err.message} onRetry={() => courseQuery.refetch()} />;
   }
   const course = courseQuery.data;
   if (!course) return <NotFoundState />;

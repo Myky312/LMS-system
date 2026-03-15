@@ -45,7 +45,7 @@ export class TasksController {
   ) {
     const teacherId =
       user.role === (UserRole.ADMIN as string) ? undefined : user.userId;
-    return this.tasksService.create(lessonId, createTaskDto, teacherId!);
+    return this.tasksService.create(lessonId, createTaskDto, teacherId);
   }
 
   @Get()

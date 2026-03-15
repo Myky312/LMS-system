@@ -72,11 +72,7 @@ export class ModulesController {
     reorderDto: ReorderModulesDto,
     @CurrentUser() user: { userId: string; role: string },
   ) {
-    return this.modulesService.reorder(
-      courseId,
-      reorderDto.items,
-      user.userId,
-    );
+    return this.modulesService.reorder(courseId, reorderDto.items, user.userId);
   }
 
   @Get(':id')

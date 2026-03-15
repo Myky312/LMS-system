@@ -71,11 +71,7 @@ export class LessonsController {
     reorderDto: ReorderLessonsDto,
     @CurrentUser() user: { userId: string; role: string },
   ) {
-    return this.lessonsService.reorder(
-      moduleId,
-      reorderDto.items,
-      user.userId,
-    );
+    return this.lessonsService.reorder(moduleId, reorderDto.items, user.userId);
   }
 
   @Get(':id')

@@ -1,5 +1,5 @@
 # Backend: create backend/.env.docker from backend/.env.docker.example (JWT + S3 keys).
-# Infra (DATABASE_URL, S3_ENDPOINT, etc.) is set in environment below; do not rely on local .env.
+# Infra (DATABASE_URL, S3_*) is set below. DATABASE_URL must be the main DB (zeekracademy), not *_test.
 
 services:
   backend:
@@ -11,6 +11,7 @@ services:
     environment:
       NODE_ENV: production
       PORT: "3000"
+      # Main DB only (test DB is used only when running E2E tests outside Docker)
       DATABASE_URL: postgresql://zeekr_user:zeekr_pass@postgres:5432/zeekracademy
       S3_ENDPOINT: http://minio:9000
       S3_FORCE_PATH_STYLE: "true"
@@ -67,10 +68,31 @@ services:
   grafana:
     image: grafana/grafana
     container_name: zeekr-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_SERVER_ROOT_URL: http://localhost:3001
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning
     ports:
       - "3001:3000"
     depends_on:
       - prometheus
+
+  # Drizzle Studio — starts with docker compose up; open https://local.drizzle.studio (allow Local network access in Chrome).
+  db-studio:
+    build:
+      context: ./backend
+      target: builder
+    command: pnpm exec drizzle-kit studio --host 0.0.0.0
+    environment:
+      DATABASE_URL: postgresql://zeekr_user:zeekr_pass@postgres:5432/zeekracademy
+    ports:
+      - "4983:4983"
+    depends_on:
+      postgres:
+        condition: service_healthy
 
 volumes:
   pg_data:

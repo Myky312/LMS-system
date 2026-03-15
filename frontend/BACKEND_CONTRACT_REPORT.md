@@ -234,17 +234,20 @@ Update/Delete в контроллере не просматривались — 
 - `instructions` — строка, optional
 - `requiredElements` — массив строк (каждая min 1), optional
 
-- **Response 201:** объект задачи. До реализации list/details страниц фронтендер **обязан** зафиксировать точный набор полей по Swagger или реальному ответу (id, lessonId, type, config и при наличии — createdAt, updatedAt и др.) и обновить contract report.
+- **Response 201:** объект задачи. **Подтверждённый shape (по коду бэкенда):** `id` (uuid), `lessonId` (uuid), `type` (QUIZ | AUDIO | PHOTO), `config` (объект по типу), `createdAt` (ISO string). Поля `updatedAt` нет; `deletedAt` не отдаётся в API.
 - **Response 400:** Invalid task config (в т.ч. Zod errors в body).
 - **Response 403:** Not authorized to create task in this lesson.
 
-- **GET list / GET by id:** до реализации list/details страниц фронтендер **обязан** зафиксировать точный response shape по Swagger или реальному ответу и обновить contract report. Без этого — не переходить к UI.
+- **GET /lessons/:lessonId/tasks** — **response 200:** массив задач. Каждый элемент: `id`, `lessonId`, `type`, `config`, `createdAt` (тот же shape, что 201). Порядок — по умолчанию от БД (сортировка не гарантирована; фронт сортирует стабильно по id или createdAt).
+- **GET /lessons/:lessonId/tasks/:id** — **response 200:** один объект задачи (тот же shape). **Response 404:** Task not found.
 
 **Important frontend note (Sprint 3):** По текущему известному контракту config для AUDIO и PHOTO **не содержит** полей для загруженных файлов (audioUrl, photoUrl). Поля `instructions`, `maxDuration`, `requiredElements` задают только условия задания. Загрузка медиа (presign → S3 → URL) относится к **ответам студента (submission answer)**, а не к созданию задачи. Перед тем как встраивать upload в create task UI для AUDIO/PHOTO, подтвердить по Swagger/бэку, что backend действительно ожидает fileUrl в task config при создании; иначе не добавлять.
 
 ---
 
 ## 8. Submissions
+
+**Sprint 4:** Архитектура и контракт (answer по типу задачи, score, политика попыток, teacher vs student flow) зафиксированы в **backend/docs/SPRINT4_ARCHITECTURE.md**. Frontend и backend должны следовать этому документу.
 
 ### Endpoints
 
@@ -294,9 +297,7 @@ Update/Delete в контроллере не просматривались — 
   - `fileName` — строка, min 1
   - `contentType` — строка, min 1 (MIME type)
 
-- **Response 200:** объект с `uploadUrl` и `fileUrl`.
-  - `uploadUrl` — PUT с телом файла на этот URL.
-  - `fileUrl` — может использоваться для полей медиа (например `lesson.videoUrl`) и для URL в ответах студента (submission answer: audioUrl, photoUrl). **В конфиг создания задачи (AUDIO/PHOTO) в текущем контракте не входит** — подтвердить по бэкенду при необходимости. Точный формат (key vs full URL) проверить по Swagger.
+- **Response 200 (подтверждён по коду бэкенда):** `uploadUrl` (string) — PUT с телом файла на этот URL; `fileUrl` (string) — ссылка вида `s3://bucket/key` (например `s3://lms-media/uploads/uuid.ext`). Используется для lesson.videoUrl и для submission answer (audioUrl, photoUrl). **В task config при создании AUDIO/PHOTO не входит.**
 
 ---
 
@@ -326,7 +327,7 @@ Update/Delete в контроллере не просматривались — 
 | `DELETE /courses/:id` | Отсутствует в контроллере (в сервисе есть softDelete без HTTP). |
 | Update/delete для modules, lessons, tasks | В коде контроллеров не просматривались; наличие проверить по Swagger/бэкенду. |
 | `/auth/me` | Отсутствует; current user только из login/refresh и session state. |
-| Presign `fileUrl` shape | Точный формат (key vs full URL) не подтверждён — проверить по бэкенду. |
+| Presign `fileUrl` shape | Подтверждён по коду: `s3://${bucket}/${key}` (например `s3://zeekr-academy-media/uploads/123.mp3`). Ответ: `uploadUrl`, `fileUrl`. |
 | Submission list item shape | Точные поля элементов списка — проверить по реальному ответу. |
 
 ---

@@ -2,9 +2,9 @@
  * E2E Test Setup
  *
  * Runs before all E2E tests:
- * - Loads .env and requires TEST_DATABASE_URL (separate DB, same schema as app)
+ * - Loads .env and requires TEST_DATABASE_URL (separate DB)
  * - Switches DATABASE_URL to test DB so the app and Drizzle use it during tests
- * - Runs migrations on test DB so its schema matches the app DB exactly
+ * - Applies the same migrations as the main DB (schema + seed) so test DB is identical
  */
 process.env.DOTENV_CONFIG_SUPPRESS_LOGS = 'true';
 
@@ -36,7 +36,7 @@ for (const envVar of requiredEnvVars) {
   }
 }
 
-// Sync test DB to app schema before every test run (same migrations as app DB)
+// Apply the same migrations as main DB (schema + seed) so test DB has identical structure and seed data
 const backendDir = resolve(__dirname, '..');
 try {
   execSync('pnpm run db:migrate', {
@@ -47,7 +47,7 @@ try {
 } catch {
   throw new Error(
     'Failed to run migrations on test database. ' +
-      'Ensure PostgreSQL is running and zeekracademy_test exists. ' +
+      'Ensure PostgreSQL is running and the test DB exists (e.g. zeekracademy_test). ' +
       'Create it if needed: createdb -U zeekr_user zeekracademy_test',
   );
 }

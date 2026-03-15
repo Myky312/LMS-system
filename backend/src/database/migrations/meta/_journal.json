@@ -15,6 +15,20 @@
       "when": 1741870800000,
       "tag": "0001_seed_admin_user",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1741870801000,
+      "tag": "0002_seed_teacher",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1741870802000,
+      "tag": "0003_seed_students",
+      "breakpoints": true
     }
   ]
 }

@@ -132,10 +132,7 @@ export class LessonsService {
 
     await db.transaction(async (tx) => {
       for (const { id, orderIndex } of items) {
-        await tx
-          .update(lessons)
-          .set({ orderIndex })
-          .where(eq(lessons.id, id));
+        await tx.update(lessons).set({ orderIndex }).where(eq(lessons.id, id));
       }
     });
 

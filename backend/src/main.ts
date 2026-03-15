@@ -2,6 +2,19 @@
 import { config } from 'dotenv';
 config({ path: '.env' });
 
+// Prevent accidentally using the test DB for the main app (only E2E tests should use *_test)
+const dbUrl = process.env.DATABASE_URL ?? '';
+if (
+  process.env.NODE_ENV !== 'test' &&
+  dbUrl &&
+  (dbUrl.includes('/_test') || /\/[^/]*_test(\/|$)/.test(dbUrl))
+) {
+  console.error(
+    'FATAL: DATABASE_URL points to a test database (*_test). Use the main DB for the app and set TEST_DATABASE_URL only for E2E tests.',
+  );
+  process.exit(1);
+}
+
 import { LoggerService } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
@@ -13,7 +26,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     bufferLogs: true,
   });
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument -- nestjs-pino Logger token
+
   const pinoLogger = app.get<LoggerService>(Logger);
   app.useLogger(pinoLogger);
 
