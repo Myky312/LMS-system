@@ -16,6 +16,7 @@ docker compose up -d
 
 echo "Done. Wait ~15s for backend and db-studio to be ready."
 echo "  Backend:    http://localhost:3000/api/v1"
-echo "  MinIO:      http://localhost:9001"
+echo "  Swagger:    http://localhost:3000/api/docs#"
+echo "  MinIO:      http://localhost:9001 (admin/minioadmin)"
 echo "  Grafana:    http://localhost:3001 (admin/admin)"
 echo "  Drizzle:    https://local.drizzle.studio (allow Local network access)"
