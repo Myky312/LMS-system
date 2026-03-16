@@ -115,7 +115,6 @@ frontend/
 │   ├── providers/             # React Query + SessionProvider
 │   └── types/                 # domain.ts (User, Course, Module, Lesson, Task, Submission)
 ├── BACKEND_CONTRACT_REPORT.md
-├── SPRINT0_SPRINT1_CHECKLIST.md
 ├── .env.local.example
 └── package.json
 ```
@@ -139,9 +138,11 @@ frontend/
 ## Документация
 
 - **[BACKEND_CONTRACT_REPORT.md](./BACKEND_CONTRACT_REPORT.md)** — контракт API: auth, токены, endpoints, payloads, ошибки, known backend gaps. Сверить с Swagger перед доработками.
-- **[SPRINT0_SPRINT1_CHECKLIST.md](./SPRINT0_SPRINT1_CHECKLIST.md)** — чеклист Sprint 0 и Sprint 1 в формате статусов [x] / [~] / [ ].
-- **[SPRINT2_CHECKLIST.md](./SPRINT2_CHECKLIST.md)** — чеклист Sprint 2 (Lessons + reorder modules/lessons).
-- **[SPRINT3_CHECKLIST.md](./SPRINT3_CHECKLIST.md)** — чеклист Sprint 3 (Tasks + media presign): контракт → типы → media helper → task schemas → create task UI → task details.
+- **Чеклисты спринтов и архитектура** — в корне репозитория, папка **docs/**:
+  - **[docs/SPRINT0_SPRINT1_CHECKLIST.md](../docs/SPRINT0_SPRINT1_CHECKLIST.md)** — Sprint 0 и 1.
+  - **[docs/SPRINT2_CHECKLIST.md](../docs/SPRINT2_CHECKLIST.md)** — Sprint 2 (Lessons + reorder).
+  - **[docs/SPRINT3_CHECKLIST.md](../docs/SPRINT3_CHECKLIST.md)** — Sprint 3 (Tasks + media presign).
+  - **[docs/SPRINT4_ARCHITECTURE.md](../docs/SPRINT4_ARCHITECTURE.md)** — Sprint 4 (Submissions + Review): архитектура и контракт.
 
 ## Тестовый вход
 

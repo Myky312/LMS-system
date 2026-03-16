@@ -5,6 +5,8 @@ Learning Management System (LMS) for structured Islamic education: courses, modu
 - **Backend**: NestJS, Drizzle, PostgreSQL, JWT, S3-compatible storage. API at `api/v1`, Swagger at `/api/docs`, health and Prometheus metrics included.  
   → Full backend docs: [backend/README.md](backend/README.md)
 
+- **Docs (repo root):** [docs/](docs/) — спринты (чеклисты 0–3, архитектура Sprint 4), Docker: [docs/DOCKER_DOWN_NETWORK.md](docs/DOCKER_DOWN_NETWORK.md).
+
 - **Run everything in Docker**: Postgres, Backend, MinIO, Prometheus, Grafana. See [Run with Docker](#run-with-docker) below.
 
 ---

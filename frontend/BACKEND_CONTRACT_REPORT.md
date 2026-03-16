@@ -247,36 +247,43 @@ Update/Delete в контроллере не просматривались — 
 
 ## 8. Submissions
 
-**Sprint 4:** Архитектура и контракт (answer по типу задачи, score, политика попыток, teacher vs student flow) зафиксированы в **backend/docs/SPRINT4_ARCHITECTURE.md**. Frontend и backend должны следовать этому документу.
+**Sprint 4:** Архитектура и контракт (answer по типу задачи, score, политика попыток, teacher vs student flow) зафиксированы в **docs/SPRINT4_ARCHITECTURE.md** (в корне репозитория). Frontend и backend должны следовать этому документу.
 
 ### Endpoints
 
 | Method | Path | Роли | Описание |
 |--------|------|------|----------|
 | POST | `/tasks/:id/submit` | STUDENT | Отправить решение (для student app) |
-| GET | `/submissions` | TEACHER, ADMIN | Список submissions |
-| GET | `/submissions/:id` | TEACHER, ADMIN (ownership для TEACHER) | Детали |
-| PATCH | `/submissions/:id/review` | TEACHER, ADMIN | Ревью (approve/reject) |
+| GET | `/submissions` | STUDENT, TEACHER, ADMIN | Список submissions (семантика по роли) |
+| GET | `/submissions/:id` | STUDENT (только свои), TEACHER, ADMIN | Детали submission |
+| PATCH | `/submissions/:id/review` | TEACHER, ADMIN | Ревью (Sprint 4 MVP: status + feedback) |
 
 ### List submissions
 
+- **GET** `/api/v1/submissions`
 - **Query:** `status` — optional, enum: PENDING | APPROVED | REJECTED.
-- **Response 200:** массив submission. TEACHER — только по своим курсам; ADMIN — все. Точные поля элементов списка (task title, student email и т.д.) — проверить по Swagger или реальному ответу.
+- **Семантика по роли:**
+  - **STUDENT:** только свои submissions (`studentId = currentUser`). Минимальные поля: id, taskId, status, createdAt. (Реализовать в Sprint 4, если ещё нет.)
+  - **TEACHER:** только по своим курсам (course → createdBy).
+  - **ADMIN:** все submissions.
+- **Response 200:** массив submission. Точные поля элементов списка (task title, student email и т.д.) — по Swagger или реальному ответу.
 
 ### Get submission
 
 - **Response 200:** один submission. Точный shape (id, taskId, studentId, answer, status, teacherFeedback, createdAt, …) — проверить по Swagger или реальному ответу.
 - **Response 404:** Submission not found.
 
-### Review submission
+### Review submission (Sprint 4 MVP contract)
 
+- **PATCH** `/api/v1/submissions/:id/review`
 - **Request:** `application/json`
   ```json
   { "status": "APPROVED", "feedback": "Good pronunciation!" }
   ```
-  - `status` — обязательно `APPROVED` или `REJECTED`
-  - `feedback` — строка, optional (в БД — teacher_feedback)
-
+  - `status` — обязательно `APPROVED` или `REJECTED`.
+  - `feedback` — строка, optional (в БД — teacher_feedback).
+  - Поле `score` в MVP не входит (отложено).
+- **Политика:** повторный PATCH на тот же submission разрешён — обновляется та же запись (status и feedback), новая не создаётся.
 - **Response 200:** обновлённый submission.
 - **Response 403:** Not authorized to review this submission.
 
