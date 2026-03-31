@@ -40,7 +40,7 @@ function formatAxiosError(err: unknown): string {
     if (typeof data.message === "string") return data.message;
     if (Array.isArray(data.message)) return data.message.map(String).join(", ");
   }
-  return "Something went wrong.";
+  return "Произошла ошибка.";
 }
 
 export function TakeQuizPage() {
@@ -89,7 +89,7 @@ export function TakeQuizPage() {
       })
       .catch(() => {
         if (!cancelled) {
-          setError("Could not load this task.");
+          setError("Не удалось загрузить задание.");
           setTask(null);
         }
       })
@@ -133,14 +133,14 @@ export function TakeQuizPage() {
     <main className="p-4 md:p-6" style={{ maxWidth: 720, margin: "0 auto" }}>
       <BrowseBreadcrumb
         items={[
-          { to: "/courses", label: "Courses" },
-          { to: `/courses/${courseId}`, label: course?.title ?? "Course" },
-          { to: `/courses/${courseId}/modules/${moduleId}`, label: moduleRow?.title ?? "Module" },
+          { to: "/courses", label: "Курсы" },
+          { to: `/courses/${courseId}`, label: course?.title ?? "Курс" },
+          { to: `/courses/${courseId}/modules/${moduleId}`, label: moduleRow?.title ?? "Модуль" },
           {
             to: `/courses/${courseId}/modules/${moduleId}/lessons/${lessonId}`,
-            label: lesson?.title ?? "Lesson",
+            label: lesson?.title ?? "Урок",
           },
-          { label: "Quiz" },
+          { label: "Тест" },
         ]}
       />
 
@@ -155,17 +155,17 @@ export function TakeQuizPage() {
       {!loading && !error && task && task.type !== "QUIZ" && (
         <Message
           severity="info"
-          text="This task is not a quiz. Only quiz tasks can be taken here."
+          text="Это задание не является тестом. Проходить здесь можно только тесты."
           className="w-full"
         />
       )}
 
       {!loading && !error && task && task.type === "QUIZ" && quizConfig && (
-        <Card title="Quiz">
+        <Card title="Тест">
           {!isStudent && (
             <Message
               severity="info"
-              text="The API only accepts quiz submissions from student accounts. Below is a preview of the question and options."
+              text="API принимает ответы на тесты только от учётных записей со ролью «Студент». Ниже — предпросмотр вопроса и вариантов."
               className="w-full mb-4"
             />
           )}
@@ -202,7 +202,7 @@ export function TakeQuizPage() {
               {submitError && <Message severity="error" text={submitError} className="w-full mb-3" />}
               <Button
                 type="button"
-                label="Submit answer"
+                label="Отправить ответ"
                 disabled={selectedOption === null}
                 loading={submitting}
                 onClick={onSubmit}
@@ -215,10 +215,10 @@ export function TakeQuizPage() {
               severity={submission.status === "APPROVED" ? "success" : "warn"}
               text={
                 submission.status === "APPROVED"
-                  ? "Correct — submission approved."
+                  ? "Верно — ответ принят (одобрено)."
                   : submission.status === "REJECTED"
-                    ? "Incorrect — submission recorded as rejected."
-                    : `Submission received (status: ${submission.status}).`
+                    ? "Неверно — ответ записан как отклонённый."
+                    : `Ответ получен (статус: ${submission.status}).`
               }
               className="w-full"
             />

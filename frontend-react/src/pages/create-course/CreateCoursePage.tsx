@@ -21,7 +21,7 @@ export function CreateCoursePage() {
   const [error, setError] = useState<string | null>(null);
 
   const titleError = useMemo(() => {
-    if (!title.trim()) return "Title is required.";
+    if (!title.trim()) return "Укажите название.";
     return null;
   }, [title]);
 
@@ -38,28 +38,30 @@ export function CreateCoursePage() {
     if (!token) return;
 
     setSubmitting(true);
-    // try {
+    try {
       const { data } = await axios.post<CreatedCourse>(
         `${API_BASE_URL}/courses`,
         { title: title.trim(), description: description.trim() || undefined },
         { headers: { Authorization: `Bearer ${token}` } }
       );
       navigate(`/courses/${data.id}/modules/new`, { replace: true });
-    // } catch (err: unknown) {
-    //   setError("Could not create the course. Check the title and your permissions.");
-    // } finally {
-    //   setSubmitting(false);
-    // }
+    } catch {
+      setError("Не удалось создать курс. Проверьте название и права доступа.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
     <main className="p-4 md:p-6" style={{ maxWidth: 560, margin: "0 auto" }}>
       <div className="mb-4">
         <Link to="/courses" className="text-sm text-primary no-underline">
-          ← Back to courses
+          ← К списку курсов
         </Link>
-        <h1 className="text-3xl m-0 mt-2">New course</h1>
-        <p className="text-color-secondary mt-2 mb-0">Create a course, then add modules and lessons.</p>
+        <h1 className="text-3xl m-0 mt-2">Новый курс</h1>
+        <p className="text-color-secondary mt-2 mb-0">
+          Создайте курс, затем добавляйте модули и уроки.
+        </p>
       </div>
 
       <Card>
@@ -68,21 +70,21 @@ export function CreateCoursePage() {
 
           <div className="flex flex-column gap-2">
             <label htmlFor="course-title" className="font-medium">
-              Title
+              Название
             </label>
             <InputText
               id="course-title"
               value={title}
               onChange={(ev) => setTitle(ev.target.value)}
               className="w-full"
-              placeholder="e.g. Introduction to Tajweed"
+              placeholder="Например: Основы таджвида"
             />
             {titleError && <small className="p-error">{titleError}</small>}
           </div>
 
           <div className="flex flex-column gap-2">
             <label htmlFor="course-desc" className="font-medium">
-              Description <span className="text-color-secondary font-normal">(optional)</span>
+              Описание <span className="text-color-secondary font-normal">(необязательно)</span>
             </label>
             <InputTextarea
               id="course-desc"
@@ -95,8 +97,14 @@ export function CreateCoursePage() {
           </div>
 
           <div className="flex gap-2 flex-wrap">
-            <Button type="submit" label="Create course" loading={submitting} disabled={!!titleError} />
-            <Button type="button" label="Cancel" severity="secondary" outlined onClick={() => navigate("/courses")} />
+            <Button type="submit" label="Создать курс" loading={submitting} disabled={!!titleError} />
+            <Button
+              type="button"
+              label="Отмена"
+              severity="secondary"
+              outlined
+              onClick={() => navigate("/courses")}
+            />
           </div>
         </form>
       </Card>

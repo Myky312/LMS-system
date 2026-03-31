@@ -23,7 +23,7 @@ export function CreateLessonPage() {
   const [error, setError] = useState<string | null>(null);
 
   const titleError = useMemo(() => {
-    if (!title.trim()) return "Title is required.";
+    if (!title.trim()) return "Укажите название.";
     return null;
   }, [title]);
 
@@ -33,11 +33,11 @@ export function CreateLessonPage() {
     try {
       const u = new URL(v);
       if (u.protocol !== "http:" && u.protocol !== "https:") {
-        return "URL must start with http:// or https://";
+        return "Адрес должен начинаться с http:// или https://";
       }
       return null;
     } catch {
-      return "Enter a valid URL or leave empty.";
+      return "Введите корректный URL или оставьте поле пустым.";
     }
   }, [videoUrl]);
 
@@ -70,7 +70,7 @@ export function CreateLessonPage() {
       );
       navigate(`/lessons/${data.id}/tasks/new`, { replace: true });
     } catch {
-      setError("Could not create the lesson. Check the video URL and your permissions.");
+      setError("Не удалось создать урок. Проверьте ссылку на видео и права доступа.");
     } finally {
       setSubmitting(false);
     }
@@ -80,10 +80,12 @@ export function CreateLessonPage() {
     <main className="p-4 md:p-6" style={{ maxWidth: 560, margin: "0 auto" }}>
       <div className="mb-4">
         <Link to="/courses" className="text-sm text-primary no-underline">
-          ← Back to courses
+          ← К списку курсов
         </Link>
-        <h1 className="text-3xl m-0 mt-2">New lesson</h1>
-        <p className="text-color-secondary mt-2 mb-0">Add a lesson to this module, then attach tasks.</p>
+        <h1 className="text-3xl m-0 mt-2">Новый урок</h1>
+        <p className="text-color-secondary mt-2 mb-0">
+          Добавьте урок в этот модуль, затем прикрепите задания.
+        </p>
       </div>
 
       <Card>
@@ -92,21 +94,21 @@ export function CreateLessonPage() {
 
           <div className="flex flex-column gap-2">
             <label htmlFor="lesson-title" className="font-medium">
-              Title
+              Название
             </label>
             <InputText
               id="lesson-title"
               value={title}
               onChange={(ev) => setTitle(ev.target.value)}
               className="w-full"
-              placeholder="e.g. Lesson 1: Al-Fatiha"
+              placeholder="Например: Урок 1: Аль-Фатиха"
             />
             {titleError && <small className="p-error">{titleError}</small>}
           </div>
 
           <div className="flex flex-column gap-2">
             <label htmlFor="lesson-video" className="font-medium">
-              Video URL <span className="text-color-secondary font-normal">(optional)</span>
+              Ссылка на видео <span className="text-color-secondary font-normal">(необязательно)</span>
             </label>
             <InputText
               id="lesson-video"
@@ -120,7 +122,8 @@ export function CreateLessonPage() {
 
           <div className="flex flex-column gap-2">
             <label htmlFor="lesson-order" className="font-medium">
-              Order index <span className="text-color-secondary font-normal">(optional)</span>
+              Порядковый номер{" "}
+              <span className="text-color-secondary font-normal">(необязательно)</span>
             </label>
             <InputNumber
               inputId="lesson-order"
@@ -135,13 +138,13 @@ export function CreateLessonPage() {
           <div className="flex gap-2 flex-wrap">
             <Button
               type="submit"
-              label="Create lesson"
+              label="Создать урок"
               loading={submitting}
               disabled={!!titleError || !!videoUrlError}
             />
             <Button
               type="button"
-              label="Cancel"
+              label="Отмена"
               severity="secondary"
               outlined
               onClick={() => navigate("/courses")}

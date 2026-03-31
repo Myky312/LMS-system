@@ -59,7 +59,7 @@ export function ModuleLessonsPage() {
       })
       .catch(() => {
         if (!cancelled) {
-          setError("Could not load this module.");
+          setError("Не удалось загрузить модуль.");
           setCourse(null);
           setModuleRow(null);
           setLessons([]);
@@ -82,9 +82,9 @@ export function ModuleLessonsPage() {
     <main className="p-4 md:p-6" style={{ maxWidth: 960, margin: "0 auto" }}>
       <BrowseBreadcrumb
         items={[
-          { to: "/courses", label: "Courses" },
-          { to: `/courses/${courseId}`, label: course?.title ?? "Course" },
-          { label: moduleRow?.title ?? "Module" },
+          { to: "/courses", label: "Курсы" },
+          { to: `/courses/${courseId}`, label: course?.title ?? "Курс" },
+          { label: moduleRow?.title ?? "Модуль" },
         ]}
       />
 
@@ -101,11 +101,11 @@ export function ModuleLessonsPage() {
           <div className="flex align-items-start justify-content-between flex-wrap gap-3 mb-4">
             <div>
               <h1 className="text-3xl m-0">{moduleRow.title}</h1>
-              <p className="text-color-secondary mt-2 mb-0">Lessons in this module</p>
+              <p className="text-color-secondary mt-2 mb-0">Уроки в этом модуле</p>
             </div>
             {canManage && (
               <Button
-                label="Add lesson"
+                label="Добавить урок"
                 icon="pi pi-plus"
                 type="button"
                 onClick={() => navigate(`/modules/${moduleId}/lessons/new`)}
@@ -114,9 +114,11 @@ export function ModuleLessonsPage() {
           </div>
 
           {sortedLessons.length === 0 ? (
-            <Card title="No lessons yet">
+            <Card title="Пока нет уроков">
               <p className="text-color-secondary m-0">
-                {canManage ? "Add a lesson, then attach quizzes and other tasks." : "No lessons yet."}
+                {canManage
+                  ? "Добавьте урок, затем прикрепите тесты и другие задания."
+                  : "Уроков пока нет."}
               </p>
             </Card>
           ) : (
@@ -133,7 +135,9 @@ export function ModuleLessonsPage() {
                       className="hover:surface-hover transition-colors transition-duration-150"
                     >
                       <div className="flex flex-column gap-2">
-                        <p className="text-color-secondary text-sm m-0">Lesson · order {lesson.orderIndex}</p>
+                        <p className="text-color-secondary text-sm m-0">
+                          Урок · порядок {lesson.orderIndex}
+                        </p>
                         {lesson.videoUrl && (
                           <a
                             href={lesson.videoUrl}
@@ -142,7 +146,7 @@ export function ModuleLessonsPage() {
                             className="text-primary text-sm"
                             onClick={(e) => e.stopPropagation()}
                           >
-                            Open video
+                            Открыть видео
                           </a>
                         )}
                       </div>

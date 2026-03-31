@@ -60,7 +60,7 @@ export function CourseModulesPage() {
       })
       .catch(() => {
         if (!cancelled) {
-          setError("Could not load this course. It may not exist or you may not have access.");
+          setError("Не удалось загрузить курс. Возможно, он не существует или нет доступа.");
           setCourse(null);
           setModules([]);
         }
@@ -82,8 +82,8 @@ export function CourseModulesPage() {
     <main className="p-4 md:p-6" style={{ maxWidth: 960, margin: "0 auto" }}>
       <BrowseBreadcrumb
         items={[
-          { to: "/courses", label: "Courses" },
-          { label: course?.title ?? "Course" },
+          { to: "/courses", label: "Курсы" },
+          { label: course?.title ?? "Курс" },
         ]}
       />
 
@@ -103,11 +103,13 @@ export function CourseModulesPage() {
               {course.description && (
                 <p className="text-color-secondary mt-2 mb-0">{course.description}</p>
               )}
-              <p className="text-color-secondary mt-2 mb-0">Open a module to see lessons and tasks.</p>
+              <p className="text-color-secondary mt-2 mb-0">
+                Откройте модуль, чтобы перейти к урокам и заданиям.
+              </p>
             </div>
             {canManage && (
               <Button
-                label="Add module"
+                label="Добавить модуль"
                 icon="pi pi-folder-plus"
                 type="button"
                 onClick={() => navigate(`/courses/${courseId}/modules/new`)}
@@ -116,11 +118,11 @@ export function CourseModulesPage() {
           </div>
 
           {sortedModules.length === 0 ? (
-            <Card title="No modules yet">
+            <Card title="Пока нет модулей">
               <p className="text-color-secondary m-0">
                 {canManage
-                  ? "Create a module to add lessons and quizzes."
-                  : "This course has no modules yet."}
+                  ? "Создайте модуль, чтобы добавить уроки и тесты."
+                  : "В этом курсе пока нет модулей."}
               </p>
             </Card>
           ) : (
@@ -133,7 +135,9 @@ export function CourseModulesPage() {
                     style={{ color: "inherit" }}
                   >
                     <Card title={m.title} className="hover:surface-hover transition-colors transition-duration-150">
-                      <p className="text-color-secondary text-sm m-0">Module · order {m.orderIndex}</p>
+                      <p className="text-color-secondary text-sm m-0">
+                        Модуль · порядок {m.orderIndex}
+                      </p>
                     </Card>
                   </Link>
                 </li>

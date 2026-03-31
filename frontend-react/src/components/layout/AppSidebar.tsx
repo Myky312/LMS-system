@@ -4,6 +4,7 @@ import { Button } from "primereact/button";
 import { appNavItems } from "@/config/nav";
 import { clearSession, getSessionUser } from "@/lib/auth/session";
 import { isTeacherOrAdmin } from "@/lib/auth/roles";
+import { roleLabelRu } from "@/lib/auth/role-labels";
 
 function userInitials(email: string): string {
   const part = email.split("@")[0] ?? email;
@@ -36,7 +37,7 @@ export function AppSidebar() {
         </Link>
       </div>
 
-      <nav className="flex flex-column gap-1 p-3 flex-1" aria-label="Main">
+      <nav className="flex flex-column gap-1 p-3 flex-1" aria-label="Основное меню">
         {appNavItems
           .filter((item) => {
             if (!item.roles?.length) return true;
@@ -68,7 +69,7 @@ export function AppSidebar() {
       </nav>
 
       <div className="mt-auto p-3 border-top-1 surface-border surface-section">
-        <div className="text-xs text-color-secondary mb-2 px-2">Profile</div>
+        <div className="text-xs text-color-secondary mb-2 px-2">Профиль</div>
         {user ? (
           <div className="flex flex-column gap-3">
             <div className="flex align-items-center gap-2 px-2">
@@ -81,11 +82,13 @@ export function AppSidebar() {
                 >
                   {user.email}
                 </span>
-                <span className="text-xs text-color-secondary line-height-1 mt-1">{user.role}</span>
+                <span className="text-xs text-color-secondary line-height-1 mt-1">
+                  {roleLabelRu(user.role)}
+                </span>
               </div>
             </div>
             <Button
-              label="Log out"
+              label="Выйти"
               icon="pi pi-sign-out"
               outlined
               className="w-full"
@@ -94,7 +97,7 @@ export function AppSidebar() {
             />
           </div>
         ) : (
-          <span className="text-sm text-color-secondary px-2">Not signed in</span>
+          <span className="text-sm text-color-secondary px-2">Вход не выполнен</span>
         )}
       </div>
     </aside>

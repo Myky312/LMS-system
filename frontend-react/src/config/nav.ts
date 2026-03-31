@@ -8,7 +8,7 @@ export type AppNavItem = {
 };
 
 export const appNavItems: AppNavItem[] = [
-  { to: "/dashboard", label: "Dashboard", icon: "pi pi-home" },
-  { to: "/courses", label: "Courses", icon: "pi pi-book" },
-  { to: "/courses/new", label: "New course", icon: "pi pi-plus", roles: ["ADMIN", "TEACHER"] },
+  { to: "/dashboard", label: "Главная", icon: "pi pi-home" },
+  { to: "/courses", label: "Курсы", icon: "pi pi-book" },
+  { to: "/courses/new", label: "Новый курс", icon: "pi pi-plus", roles: ["ADMIN", "TEACHER"] },
 ];

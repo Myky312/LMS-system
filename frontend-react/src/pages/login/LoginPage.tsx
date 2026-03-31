@@ -27,19 +27,20 @@ function formatLoginError(err: unknown): string {
     if (Array.isArray(message)) return message.map(String).join(", ");
     if (typeof message === "string") return message;
   }
-  return "Sign in failed. Check your email and password.";
+  return "Не удалось войти. Проверьте электронную почту и пароль.";
 }
 
 function validateEmail(value: string): string | null {
   const v = value.trim();
-  if (!v) return "Email is required.";
-  if (!EMAIL_RE.test(v)) return "Enter a valid email address.";
+  if (!v) return "Укажите электронную почту.";
+  if (!EMAIL_RE.test(v)) return "Введите корректный адрес почты.";
   return null;
 }
 
 function validatePassword(value: string): string | null {
-  if (!value) return "Password is required.";
-  if (value.length < PASSWORD_MIN) return `Password must be at least ${PASSWORD_MIN} characters.`;
+  if (!value) return "Введите пароль.";
+  if (value.length < PASSWORD_MIN)
+    return `Пароль должен быть не короче ${PASSWORD_MIN} символов.`;
   return null;
 }
 
@@ -91,7 +92,7 @@ export function LoginPage() {
       style={{ background: "var(--surface-ground)" }}
     >
       <Card
-        title="Sign in"
+        title="Вход"
         subTitle="ZeekrAcademy"
         className="w-full shadow-2 border-round-xl"
         style={{ maxWidth: 420 }}
@@ -104,7 +105,7 @@ export function LoginPage() {
 
           <div className="flex flex-column gap-2 w-full">
             <label htmlFor="email" className="text-sm m-0" style={{ color: "var(--text-color)" }}>
-              Email
+              Электронная почта
             </label>
             <InputText
               id="email"
@@ -123,7 +124,7 @@ export function LoginPage() {
 
           <div className="flex flex-column gap-2 w-full">
             <label htmlFor="password" className="text-sm m-0" style={{ color: "var(--text-color)" }}>
-              Password
+              Пароль
             </label>
             <Password
               inputId="password"
@@ -133,7 +134,7 @@ export function LoginPage() {
               toggleMask
               feedback={false}
               invalid={touchedPassword && !!passwordError}
-              placeholder="Enter your password"
+              placeholder="Введите пароль"
               className="w-full"
               inputClassName="w-full"
             />
@@ -144,13 +145,13 @@ export function LoginPage() {
 
           <div className="flex justify-content-end">
             <Link to="/forgot-password" className="text-sm no-underline" style={{ color: "var(--primary-color)" }}>
-              Forgot password?
+              Забыли пароль?
             </Link>
           </div>
 
           <Button
             type="submit"
-            label="Log in"
+            label="Войти"
             icon="pi pi-sign-in"
             className="w-full"
             loading={submitting}

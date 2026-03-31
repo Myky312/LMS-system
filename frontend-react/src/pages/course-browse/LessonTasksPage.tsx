@@ -11,6 +11,7 @@ import { authHeaders } from "@/lib/api/auth-headers";
 import { getSessionUser } from "@/lib/auth/session";
 import { isTeacherOrAdmin } from "@/lib/auth/roles";
 import { BrowseBreadcrumb } from "@/components/browse/BrowseBreadcrumb";
+import { taskTypeLabelRu } from "@/lib/task-type-labels";
 
 type CourseDetail = { id: string; title: string };
 type ModuleRow = { id: string; title: string };
@@ -71,7 +72,7 @@ export function LessonTasksPage() {
       })
       .catch(() => {
         if (!cancelled) {
-          setError("Could not load this lesson.");
+          setError("Не удалось загрузить урок.");
           setCourse(null);
           setModuleRow(null);
           setLesson(null);
@@ -98,10 +99,10 @@ export function LessonTasksPage() {
     <main className="p-4 md:p-6" style={{ maxWidth: 960, margin: "0 auto" }}>
       <BrowseBreadcrumb
         items={[
-          { to: "/courses", label: "Courses" },
-          { to: `/courses/${courseId}`, label: course?.title ?? "Course" },
-          { to: `/courses/${courseId}/modules/${moduleId}`, label: moduleRow?.title ?? "Module" },
-          { label: lesson?.title ?? "Lesson" },
+          { to: "/courses", label: "Курсы" },
+          { to: `/courses/${courseId}`, label: course?.title ?? "Курс" },
+          { to: `/courses/${courseId}/modules/${moduleId}`, label: moduleRow?.title ?? "Модуль" },
+          { label: lesson?.title ?? "Урок" },
         ]}
       />
 
@@ -118,11 +119,11 @@ export function LessonTasksPage() {
           <div className="flex align-items-start justify-content-between flex-wrap gap-3 mb-4">
             <div>
               <h1 className="text-3xl m-0">{lesson.title}</h1>
-              <p className="text-color-secondary mt-2 mb-0">Quizzes and other tasks for this lesson</p>
+              <p className="text-color-secondary mt-2 mb-0">Тесты и другие задания этого урока</p>
             </div>
             {canManage && (
               <Button
-                label="Add task"
+                label="Добавить задание"
                 icon="pi pi-plus"
                 type="button"
                 onClick={() => navigate(`/lessons/${lessonId}/tasks/new`)}
@@ -131,7 +132,7 @@ export function LessonTasksPage() {
           </div>
 
           {lesson.videoUrl && (
-            <Card title="Video" className="mb-4">
+            <Card title="Видео" className="mb-4">
               <a
                 href={lesson.videoUrl}
                 target="_blank"
@@ -144,14 +145,14 @@ export function LessonTasksPage() {
           )}
 
           <section className="mb-4">
-            <h2 className="text-xl mt-0 mb-3">Quizzes</h2>
+            <h2 className="text-xl mt-0 mb-3">Тесты</h2>
             {quizTasks.length === 0 ? (
-              <p className="text-color-secondary m-0">No quiz tasks in this lesson.</p>
+              <p className="text-color-secondary m-0">В этом уроке нет тестовых заданий.</p>
             ) : (
               <ul className="list-none p-0 m-0 flex flex-column gap-3">
                 {quizTasks.map((t) => {
                   const cfg = t.config as { question?: string } | null;
-                  const preview = cfg?.question?.slice(0, 80) ?? "Quiz";
+                  const preview = cfg?.question?.slice(0, 80) ?? "Тест";
                   return (
                     <li key={t.id}>
                       <Link to={taskLink(t.id)} className="no-underline" style={{ color: "inherit" }}>
@@ -159,7 +160,7 @@ export function LessonTasksPage() {
                           title={preview + (cfg?.question && cfg.question.length > 80 ? "…" : "")}
                           className="hover:surface-hover transition-colors transition-duration-150"
                         >
-                          <Tag value="QUIZ" severity="info" className="text-xs" />
+                          <Tag value={taskTypeLabelRu("QUIZ")} severity="info" className="text-xs" />
                         </Card>
                       </Link>
                     </li>
@@ -170,15 +171,15 @@ export function LessonTasksPage() {
           </section>
 
           <section>
-            <h2 className="text-xl mt-0 mb-3">Other tasks</h2>
+            <h2 className="text-xl mt-0 mb-3">Другие задания</h2>
             {otherTasks.length === 0 ? (
-              <p className="text-color-secondary m-0">No audio or photo tasks.</p>
+              <p className="text-color-secondary m-0">Нет аудио- или фото-заданий.</p>
             ) : (
               <ul className="list-none p-0 m-0 flex flex-column gap-3">
                 {otherTasks.map((t) => (
                   <li key={t.id}>
-                    <Card title={`${t.type} task`}>
-                      <Tag value={t.type} className="text-xs" />
+                    <Card title={`${taskTypeLabelRu(t.type)} — задание`}>
+                      <Tag value={taskTypeLabelRu(t.type)} className="text-xs" />
                     </Card>
                   </li>
                 ))}

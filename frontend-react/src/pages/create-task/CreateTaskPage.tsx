@@ -12,18 +12,18 @@ import { getAccessToken, getSessionUser } from "@/lib/auth/session";
 import { isTeacherOrAdmin } from "@/lib/auth/roles";
 
 const TASK_TYPES = [
-  { label: "Quiz", value: "QUIZ" as const },
-  { label: "Audio", value: "AUDIO" as const },
-  { label: "Photo", value: "PHOTO" as const },
+  { label: "Тест", value: "QUIZ" as const },
+  { label: "Аудио", value: "AUDIO" as const },
+  { label: "Фото", value: "PHOTO" as const },
 ];
 
 type TaskTypeValue = (typeof TASK_TYPES)[number]["value"];
 
 const CORRECT_OPTIONS = [
-  { label: "Option 1 (index 0)", value: 0 },
-  { label: "Option 2 (index 1)", value: 1 },
-  { label: "Option 3 (index 2)", value: 2 },
-  { label: "Option 4 (index 3)", value: 3 },
+  { label: "Вариант 1 (индекс 0)", value: 0 },
+  { label: "Вариант 2 (индекс 1)", value: 1 },
+  { label: "Вариант 3 (индекс 2)", value: 2 },
+  { label: "Вариант 4 (индекс 3)", value: 3 },
 ];
 
 export function CreateTaskPage() {
@@ -43,9 +43,9 @@ export function CreateTaskPage() {
 
   const quizErrors = useMemo(() => {
     if (type !== "QUIZ") return null;
-    if (!quizQuestion.trim()) return "Question is required.";
+    if (!quizQuestion.trim()) return "Введите текст вопроса.";
     for (let i = 0; i < 4; i++) {
-      if (!quizOptions[i]?.trim()) return `Option ${i + 1} is required.`;
+      if (!quizOptions[i]?.trim()) return `Заполните вариант ${i + 1}.`;
     }
     return null;
   }, [type, quizQuestion, quizOptions]);
@@ -55,7 +55,8 @@ export function CreateTaskPage() {
     const raw = audioMaxDuration.trim();
     if (!raw) return null;
     const n = Number(raw);
-    if (!Number.isInteger(n) || n <= 0) return "Max duration must be a positive whole number (seconds).";
+    if (!Number.isInteger(n) || n <= 0)
+      return "Максимальная длительность — целое положительное число (секунды).";
     return null;
   }, [type, audioMaxDuration]);
 
@@ -113,7 +114,9 @@ export function CreateTaskPage() {
       });
       navigate("/courses", { replace: true });
     } catch {
-      setError("Could not create the task. Check the fields match the selected type (quiz needs 4 options).");
+      setError(
+        "Не удалось создать задание. Проверьте поля для выбранного типа (тесту нужны 4 варианта ответа)."
+      );
     } finally {
       setSubmitting(false);
     }
@@ -125,11 +128,11 @@ export function CreateTaskPage() {
     <main className="p-4 md:p-6" style={{ maxWidth: 640, margin: "0 auto" }}>
       <div className="mb-4">
         <Link to="/courses" className="text-sm text-primary no-underline">
-          ← Back to courses
+          ← К списку курсов
         </Link>
-        <h1 className="text-3xl m-0 mt-2">New task</h1>
+        <h1 className="text-3xl m-0 mt-2">Новое задание</h1>
         <p className="text-color-secondary mt-2 mb-0">
-          Quiz tasks require exactly four options and a correct answer index 0–3.
+          Для теста нужны ровно четыре варианта и номер правильного ответа от 0 до 3.
         </p>
       </div>
 
@@ -139,7 +142,7 @@ export function CreateTaskPage() {
 
           <div className="flex flex-column gap-2">
             <label htmlFor="task-type" className="font-medium">
-              Task type
+              Тип задания
             </label>
             <Dropdown
               inputId="task-type"
@@ -154,7 +157,7 @@ export function CreateTaskPage() {
             <>
               <div className="flex flex-column gap-2">
                 <label htmlFor="quiz-q" className="font-medium">
-                  Question
+                  Вопрос
                 </label>
                 <InputTextarea
                   id="quiz-q"
@@ -168,7 +171,7 @@ export function CreateTaskPage() {
               {[0, 1, 2, 3].map((i) => (
                 <div key={i} className="flex flex-column gap-2">
                   <label htmlFor={`opt-${i}`} className="font-medium">
-                    Option {i + 1}
+                    Вариант {i + 1}
                   </label>
                   <InputText
                     id={`opt-${i}`}
@@ -184,7 +187,7 @@ export function CreateTaskPage() {
               ))}
               <div className="flex flex-column gap-2">
                 <label htmlFor="correct" className="font-medium">
-                  Correct answer
+                  Правильный ответ
                 </label>
                 <Dropdown
                   inputId="correct"
@@ -201,7 +204,8 @@ export function CreateTaskPage() {
             <>
               <div className="flex flex-column gap-2">
                 <label htmlFor="audio-inst" className="font-medium">
-                  Instructions <span className="text-color-secondary font-normal">(optional)</span>
+                  Инструкция{" "}
+                  <span className="text-color-secondary font-normal">(необязательно)</span>
                 </label>
                 <InputTextarea
                   id="audio-inst"
@@ -214,14 +218,15 @@ export function CreateTaskPage() {
               </div>
               <div className="flex flex-column gap-2">
                 <label htmlFor="audio-max" className="font-medium">
-                  Max duration (seconds) <span className="text-color-secondary font-normal">(optional)</span>
+                  Макс. длительность (сек.){" "}
+                  <span className="text-color-secondary font-normal">(необязательно)</span>
                 </label>
                 <InputText
                   id="audio-max"
                   value={audioMaxDuration}
                   onChange={(ev) => setAudioMaxDuration(ev.target.value)}
                   className="w-full"
-                  placeholder="e.g. 120"
+                  placeholder="Например: 120"
                 />
                 {audioErrors && <small className="p-error">{audioErrors}</small>}
               </div>
@@ -232,7 +237,8 @@ export function CreateTaskPage() {
             <>
               <div className="flex flex-column gap-2">
                 <label htmlFor="photo-inst" className="font-medium">
-                  Instructions <span className="text-color-secondary font-normal">(optional)</span>
+                  Инструкция{" "}
+                  <span className="text-color-secondary font-normal">(необязательно)</span>
                 </label>
                 <InputTextarea
                   id="photo-inst"
@@ -245,7 +251,10 @@ export function CreateTaskPage() {
               </div>
               <div className="flex flex-column gap-2">
                 <label htmlFor="photo-el" className="font-medium">
-                  Required elements <span className="text-color-secondary font-normal">(optional, one per line)</span>
+                  Обязательные элементы{" "}
+                  <span className="text-color-secondary font-normal">
+                    (необязательно, по одному на строку)
+                  </span>
                 </label>
                 <InputTextarea
                   id="photo-el"
@@ -262,10 +271,10 @@ export function CreateTaskPage() {
           {quizErrors && type === "QUIZ" && <small className="p-error">{quizErrors}</small>}
 
           <div className="flex gap-2 flex-wrap">
-            <Button type="submit" label="Create task" loading={submitting} disabled={formInvalid} />
+            <Button type="submit" label="Создать задание" loading={submitting} disabled={formInvalid} />
             <Button
               type="button"
-              label="Cancel"
+              label="Отмена"
               severity="secondary"
               outlined
               onClick={() => navigate("/courses")}

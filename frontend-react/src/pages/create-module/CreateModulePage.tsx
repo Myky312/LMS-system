@@ -22,7 +22,7 @@ export function CreateModulePage() {
   const [error, setError] = useState<string | null>(null);
 
   const titleError = useMemo(() => {
-    if (!title.trim()) return "Title is required.";
+    if (!title.trim()) return "Укажите название.";
     return null;
   }, [title]);
 
@@ -54,7 +54,7 @@ export function CreateModulePage() {
       );
       navigate(`/modules/${data.id}/lessons/new`, { replace: true });
     } catch {
-      setError("Could not create the module. Check that you own this course or try again.");
+      setError("Не удалось создать модуль. Проверьте, что курс принадлежит вам, и попробуйте снова.");
     } finally {
       setSubmitting(false);
     }
@@ -64,11 +64,11 @@ export function CreateModulePage() {
     <main className="p-4 md:p-6" style={{ maxWidth: 560, margin: "0 auto" }}>
       <div className="mb-4">
         <Link to="/courses" className="text-sm text-primary no-underline">
-          ← Back to courses
+          ← К списку курсов
         </Link>
-        <h1 className="text-3xl m-0 mt-2">New module</h1>
+        <h1 className="text-3xl m-0 mt-2">Новый модуль</h1>
         <p className="text-color-secondary mt-2 mb-0">
-          Add a module to this course. Next you can add lessons and tasks.
+          Добавьте модуль в этот курс. Затем можно добавить уроки и задания.
         </p>
       </div>
 
@@ -78,21 +78,22 @@ export function CreateModulePage() {
 
           <div className="flex flex-column gap-2">
             <label htmlFor="module-title" className="font-medium">
-              Title
+              Название
             </label>
             <InputText
               id="module-title"
               value={title}
               onChange={(ev) => setTitle(ev.target.value)}
               className="w-full"
-              placeholder="e.g. Module 1: Letters"
+              placeholder="Например: Модуль 1: Буквы"
             />
             {titleError && <small className="p-error">{titleError}</small>}
           </div>
 
           <div className="flex flex-column gap-2">
             <label htmlFor="module-order" className="font-medium">
-              Order index <span className="text-color-secondary font-normal">(optional)</span>
+              Порядковый номер{" "}
+              <span className="text-color-secondary font-normal">(необязательно)</span>
             </label>
             <InputNumber
               inputId="module-order"
@@ -101,15 +102,15 @@ export function CreateModulePage() {
               min={0}
               showButtons
               className="w-full"
-              placeholder="Auto if empty"
+              placeholder="Авто, если пусто"
             />
           </div>
 
           <div className="flex gap-2 flex-wrap">
-            <Button type="submit" label="Create module" loading={submitting} disabled={!!titleError} />
+            <Button type="submit" label="Создать модуль" loading={submitting} disabled={!!titleError} />
             <Button
               type="button"
-              label="Cancel"
+              label="Отмена"
               severity="secondary"
               outlined
               onClick={() => navigate("/courses")}

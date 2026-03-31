@@ -39,7 +39,9 @@ export function ListCoursesPage() {
       })
       .catch(() => {
         if (!cancelled) {
-          setError("Could not load courses. Check that the API is running and you have access.");
+          setError(
+            "Не удалось загрузить курсы. Убедитесь, что API запущен и у вас есть доступ."
+          );
           setCourses([]);
         }
       })
@@ -56,19 +58,24 @@ export function ListCoursesPage() {
     <main className="p-4 md:p-6" style={{ maxWidth: 960, margin: "0 auto" }}>
       <div className="flex align-items-center justify-content-between flex-wrap gap-3 mb-4">
         <div>
-          <h1 className="text-3xl m-0">Courses</h1>
-          <p className="text-color-secondary mt-2 mb-0">All courses you can access.</p>
+          <h1 className="text-3xl m-0">Курсы</h1>
+          <p className="text-color-secondary mt-2 mb-0">Все курсы, к которым у вас есть доступ.</p>
         </div>
         <div className="flex gap-2 flex-wrap">
           {canManage && (
             <Button
-              label="New course"
+              label="Новый курс"
               icon="pi pi-plus"
               type="button"
               onClick={() => navigate("/courses/new")}
             />
           )}
-          <Button label="Refresh" icon="pi pi-refresh" type="button" onClick={() => window.location.reload()} />
+          <Button
+            label="Обновить"
+            icon="pi pi-refresh"
+            type="button"
+            onClick={() => window.location.reload()}
+          />
         </div>
       </div>
 
@@ -81,8 +88,10 @@ export function ListCoursesPage() {
       {!loading && error && <Message severity="warn" text={error} className="w-full mb-4" />}
 
       {!loading && !error && courses && courses.length === 0 && (
-        <Card title="No courses yet">
-          <p className="text-color-secondary m-0">Create a course from the API or seed data to see it here.</p>
+        <Card title="Пока нет курсов">
+          <p className="text-color-secondary m-0">
+            Создайте курс через API или загрузите тестовые данные, чтобы они отобразились здесь.
+          </p>
         </Card>
       )}
 
@@ -99,7 +108,7 @@ export function ListCoursesPage() {
                 footer={
                   <div className="flex gap-2 flex-wrap">
                     <Button
-                      label="Open course"
+                      label="Открыть курс"
                       icon="pi pi-arrow-right"
                       type="button"
                       outlined
@@ -108,7 +117,7 @@ export function ListCoursesPage() {
                     />
                     {canManage && (
                       <Button
-                        label="Add module"
+                        label="Добавить модуль"
                         icon="pi pi-folder-plus"
                         type="button"
                         outlined

@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 export function BrowseBreadcrumb(props: { items: { to?: string; label: string }[] }) {
   return (
-    <nav className="text-sm text-color-secondary mb-4" aria-label="Breadcrumb">
+    <nav className="text-sm text-color-secondary mb-4" aria-label="Навигация по разделам">
       {props.items.map((item, i) => (
         <span key={`${item.label}-${i}`}>
           {i > 0 && <span className="mx-2">/</span>}

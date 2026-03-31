@@ -11,14 +11,18 @@ export function ForgotPasswordPage() {
       className="flex min-h-screen align-items-center justify-content-center p-4"
       style={{ background: "var(--surface-ground)" }}
     >
-      <Card title="Forgot password?" className="w-full" style={{ maxWidth: 420 }}>
+      <Card title="Забыли пароль?" className="w-full" style={{ maxWidth: 420 }}>
         <p className="text-color-secondary line-height-3 mb-3">
-          Password reset is not available in the app yet. Please contact your administrator or use
-          the credentials provided for your environment.
+          Восстановление пароля в приложении пока недоступно. Обратитесь к администратору или используйте
+          учётные данные, выданные для вашей среды.
         </p>
-        <Message severity="info" text="Tip: default dev accounts are listed in the backend migration seed files." className="w-full mb-3" />
+        <Message
+          severity="info"
+          text="Подсказка: тестовые учётные записи для разработки указаны в файлах миграций и сидов бэкенда."
+          className="w-full mb-3"
+        />
         <Button
-          label="Back to sign in"
+          label="Назад ко входу"
           icon="pi pi-arrow-left"
           className="w-full"
           outlined
