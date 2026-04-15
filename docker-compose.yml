@@ -32,8 +32,9 @@ services:
       POSTGRES_USER: zeekr_user
       POSTGRES_PASSWORD: zeekr_pass
       POSTGRES_DB: zeekracademy
+    # Host 5433 avoids conflict when another Postgres already uses 5432 (containers still use postgres:5432).
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
