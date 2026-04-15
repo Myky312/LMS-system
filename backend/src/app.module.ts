@@ -19,6 +19,7 @@ import { MediaModule } from './media/media.module';
 import { HealthModule } from './health';
 import { MetricsModule } from './metrics/metrics.module';
 import { UsersModule } from './users/users.module';
+import { DashboardModule } from './dashboard/dashboard.module';
 import { LoggingInterceptor } from './common/interceptors/logging.interceptor';
 import { MetricsInterceptor } from './common/interceptors/metrics.interceptor';
 import { RequestIdMiddleware } from './common/middleware/request-id.middleware';
@@ -71,6 +72,7 @@ function resolveLogLevel(): (typeof LOG_LEVELS)[number] {
     HealthModule,
     MetricsModule,
     UsersModule,
+    DashboardModule,
   ],
   providers: [
     ...(process.env.NODE_ENV !== 'test'
