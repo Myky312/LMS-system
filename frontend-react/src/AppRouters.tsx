@@ -14,6 +14,8 @@ import { CreateLessonPage } from "@/pages/create-lesson";
 import { CreateTaskPage } from "@/pages/create-task";
 import { AuthenticatedLayout } from "@/layouts/AuthenticatedLayout";
 import { RequireTeacherOrAdmin } from "@/components/auth/RequireTeacherOrAdmin";
+import { RequireAdmin } from "@/components/auth/RequireAdmin";
+import { UsersPage } from "@/pages/users";
 import { isLoggedIn } from "@/lib/auth/session";
 
 function RequireAuth() {
@@ -31,6 +33,9 @@ export function AppRouters() {
       <Route element={<RequireAuth />}>
         <Route element={<AuthenticatedLayout />}>
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route element={<RequireAdmin />}>
+            <Route path="/users" element={<UsersPage />} />
+          </Route>
           <Route path="/courses" element={<ListCoursesPage />} />
           <Route path="/courses/:courseId" element={<CourseModulesPage />} />
           <Route path="/courses/:courseId/modules/:moduleId" element={<ModuleLessonsPage />} />

@@ -3,7 +3,6 @@ import { Avatar } from "primereact/avatar";
 import { Button } from "primereact/button";
 import { appNavItems } from "@/config/nav";
 import { clearSession, getSessionUser } from "@/lib/auth/session";
-import { isTeacherOrAdmin } from "@/lib/auth/roles";
 import { roleLabelRu } from "@/lib/auth/role-labels";
 
 function userInitials(email: string): string {
@@ -41,7 +40,7 @@ export function AppSidebar() {
         {appNavItems
           .filter((item) => {
             if (!item.roles?.length) return true;
-            return isTeacherOrAdmin(user);
+            return !!user && item.roles.includes(user.role);
           })
           .map(({ to, label, icon }) => (
           <NavLink

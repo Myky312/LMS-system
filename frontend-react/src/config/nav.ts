@@ -11,4 +11,5 @@ export const appNavItems: AppNavItem[] = [
   { to: "/dashboard", label: "Главная", icon: "pi pi-home" },
   { to: "/courses", label: "Курсы", icon: "pi pi-book" },
   { to: "/courses/new", label: "Новый курс", icon: "pi pi-plus", roles: ["ADMIN", "TEACHER"] },
+  { to: "/users", label: "Пользователи", icon: "pi pi-users", roles: ["ADMIN"] },
 ];
